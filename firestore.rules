@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if the caller is an admin
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper: check if the caller is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Users: any authenticated user can read, only admin can write
+    match /users/{userId} {
+      allow read: if isAuth();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Products: any authenticated user can read, only admin can write
+    match /products/{productId} {
+      allow read: if isAuth();
+      allow create, update, delete: if isAdmin();
+
+      match /priceHistory/{historyId} {
+        allow read: if isAuth();
+        allow create: if isAdmin();
+        allow update, delete: if false; // price history is immutable
+      }
+    }
+
+    // Settings (categories, etc): any authenticated user can read, only admin can write
+    match /settings/{docId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // Orders: any authenticated user can read and create/update
+    match /orders/{orderId} {
+      allow read: if isAuth();
+      allow create: if isAuth();
+      allow update: if isAuth();
+      allow delete: if isAdmin();
+
+      match /items/{itemId} {
+        allow read: if isAuth();
+        allow create: if isAuth();
+        allow update, delete: if false; // order items are immutable after creation
+      }
+    }
+  }
+}
+

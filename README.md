@@ -75,9 +75,9 @@ cd JoyMilk
 5. Letakkan file di folder `app/`
 
 ### 3. Enable Firebase Services
-Di Firebase Console:
-- **Authentication** → Sign-in method → Enable **Email/Password**
-- **Cloud Firestore** → Create database → Start in **production mode**
+Di Firebase Console (sidebar kiri):
+- **Authentication** → klik **"Security"** → Authentication → Get started → Sign-in method → Email/Password → Enable
+- **Firestore** → klik **"Databases & Storage"** → Firestore Database → Create database → pilih region **asia-southeast2 (Jakarta)** → Start in **production mode**
 
 ### 4. Setup Initial Admin User
 1. Di Firebase Console → Authentication → Add user:
@@ -121,6 +121,8 @@ Atau buka project di Android Studio dan klik ▶️ Run.
 | [Database Schema](docs/DATABASE_SCHEMA.md) | Skema database Firestore |
 | [Workflow](docs/WORKFLOW.md) | Alur kerja aplikasi |
 | [UI/UX Rules](docs/UI_UX_RULES.md) | Aturan desain dan komponen UI |
+| [Mockup UI](docs/MOCKUP.md) | Spesifikasi mockup 13 layar & wireframe ASCII |
+| [Interactive Prototype](docs/mockup.html) | Prototype mockup interaktif web (bisa dibuka di browser) |
 | [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) | Rencana implementasi per fase |
 
 ---

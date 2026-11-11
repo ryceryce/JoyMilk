@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">JoyMilk</string>
+
+    <!-- Auth -->
+    <string name="login_title">Masuk ke JoyMilk</string>
+    <string name="email_label">Email</string>
+    <string name="password_label">Password</string>
+    <string name="btn_login">Masuk</string>
+    <string name="login_error_invalid">Email atau password salah</string>
+    <string name="login_error_network">Gagal terhubung. Periksa koneksi internet.</string>
+    <string name="logout">Keluar</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Beranda</string>
+    <string name="greeting">Halo, %1$s!</string>
+    <string name="today_orders">Order Hari Ini</string>
+    <string name="today_sales">Penjualan Hari Ini</string>
+    <string name="btn_new_order">Buat Order Baru</string>
+    <string name="recent_orders">Order Terbaru</string>
+
+    <!-- Order -->
+    <string name="order_list_title">Daftar Order</string>
+    <string name="order_detail_title">Detail Order</string>
+    <string name="order_form_title_new">Buat Order Baru</string>
+    <string name="order_form_title_edit">Edit Order</string>
+    <string name="customer_name">Nama Pelanggan</string>
+    <string name="customer_phone">Nomor Telepon</string>
+    <string name="delivery_address">Alamat Pengiriman</string>
+    <string name="payment_method">Metode Pembayaran</string>
+    <string name="notes">Catatan</string>
+    <string name="add_item">Tambah Produk</string>
+    <string name="total">Total</string>
+    <string name="btn_save_order">Simpan Order</string>
+    <string name="btn_update_status">Update Status</string>
+    <string name="order_saved">Order berhasil disimpan</string>
+    <string name="order_save_failed">Gagal menyimpan order. Coba lagi.</string>
+    <string name="order_status_updated">Status order diperbarui</string>
+    <string name="no_orders">Belum ada order</string>
+    <string name="sweet_level">Tingkat Kemanisan</string>
+
+    <!-- Product -->
+    <string name="product_list_title">Master Produk</string>
+    <string name="product_form_title_new">Tambah Produk</string>
+    <string name="product_form_title_edit">Edit Produk</string>
+    <string name="product_name">Nama Produk</string>
+    <string name="product_category">Kategori</string>
+    <string name="product_price">Harga (Rp)</string>
+    <string name="product_unit">Satuan</string>
+    <string name="product_description">Deskripsi</string>
+    <string name="price_history_title">Riwayat Harga</string>
+    <string name="btn_save_product">Simpan Produk</string>
+    <string name="product_saved">Produk berhasil disimpan</string>
+    <string name="product_save_failed">Gagal menyimpan produk. Coba lagi.</string>
+    <string name="no_products">Belum ada produk</string>
+    <string name="price_change_warning">Harga akan diupdate dan dicatat di riwayat</string>
+
+    <!-- Report -->
+    <string name="report_title">Laporan</string>
+    <string name="daily_report">Harian</string>
+    <string name="weekly_report">Mingguan</string>
+    <string name="monthly_report">Bulanan</string>
+    <string name="total_orders">Total Order</string>
+    <string name="total_revenue">Total Penjualan</string>
+    <string name="top_products">Produk Terlaris</string>
+
+    <!-- User Management -->
+    <string name="user_list_title">Kelola User</string>
+    <string name="user_form_title_new">Tambah User</string>
+    <string name="user_name">Nama</string>
+    <string name="user_email">Email</string>
+    <string name="user_role">Role</string>
+    <string name="btn_save_user">Simpan User</string>
+    <string name="user_saved">User berhasil disimpan</string>
+
+    <!-- Common -->
+    <string name="btn_save">Simpan</string>
+    <string name="btn_cancel">Batal</string>
+    <string name="btn_delete">Hapus</string>
+    <string name="btn_edit">Edit</string>
+    <string name="btn_retry">Coba Lagi</string>
+    <string name="loading">Memuat…</string>
+    <string name="error_general">Terjadi kesalahan. Coba lagi.</string>
+    <string name="error_no_access">Anda tidak memiliki akses untuk fitur ini.</string>
+    <string name="search_hint">Cari…</string>
+    <string name="filter_all">Semua</string>
+    <string name="filter_today">Hari Ini</string>
+    <string name="filter_this_week">Minggu Ini</string>
+    <string name="filter_this_month">Bulan Ini</string>
+
+    <!-- Status -->
+    <string name="status_pending">Pending</string>
+    <string name="status_processing">Diproses</string>
+    <string name="status_delivered">Selesai</string>
+    <string name="status_cancelled">Dibatalkan</string>
+
+    <!-- Payment -->
+    <string name="payment_cash">Cash</string>
+    <string name="payment_transfer">Transfer Bank</string>
+    <string name="payment_ewallet">E-Wallet</string>
+
+    <!-- Sweet Level -->
+    <string name="sweet_tanpa_gula">Tanpa Gula</string>
+    <string name="sweet_less_sugar">Less Sugar</string>
+    <string name="sweet_normal">Normal</string>
+    <string name="sweet_extra_sweet">Extra Sweet</string>
+
+    <!-- Confirm -->
+    <string name="confirm_delete">Yakin ingin menghapus?</string>
+    <string name="confirm_cancel_order">Yakin ingin membatalkan order ini?</string>
+    <string name="confirm_yes">Ya</string>
+    <string name="confirm_no">Tidak</string>
+</resources>
+

@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JoyMilk — Interactive UI Mockup Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0f172a;
+    }
+    .phone-screen {
+      width: 380px;
+      height: 780px;
+      border-radius: 44px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 10px #1e293b;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #FAFAFA;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col md:flex-row items-center justify-center p-4 md:p-8 gap-8">
+
+  <!-- Controls & Screen Selector Sidebar -->
+  <div class="w-full md:w-80 bg-slate-800/80 backdrop-blur p-6 rounded-3xl border border-slate-700 flex flex-col gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/30">
+        🥛
+      </div>
+      <div>
+        <h1 class="font-bold text-lg text-white">JoyMilk Mockup</h1>
+        <p class="text-xs text-emerald-400 font-medium">Interactive Prototype</p>
+      </div>
+    </div>
+
+    <div class="p-3 bg-slate-900/60 rounded-2xl border border-slate-700/50">
+      <label class="text-xs font-semibold text-slate-400 block mb-2">MODE HAK AKSES:</label>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="btnRoleAdmin" onclick="setRole('admin')" class="py-2 px-3 text-xs font-bold rounded-xl transition bg-emerald-600 text-white shadow">
+          👑 Admin
+        </button>
+        <button id="btnRoleStaff" onclick="setRole('staff')" class="py-2 px-3 text-xs font-bold rounded-xl transition bg-slate-700 text-slate-300 hover:bg-slate-600">
+          💼 Staff
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs font-semibold text-slate-400 block mb-2">PILIH HALAMAN (13 SCREENS):</label>
+      <div class="space-y-1.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+        <button onclick="showScreen('login')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" data-screen="login">
+          <span>🔐 1. Login Screen</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('dashboard')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700" data-screen="dashboard">
+          <span>📊 2. Dashboard</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('orders')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700" data-screen="orders">
+          <span>📋 3. Daftar Order</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('order-form')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700" data-screen="order-form">
+          <span>📝 4. Buat Order Baru</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('order-detail')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700" data-screen="order-detail">
+          <span>📄 5. Detail Order</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('products')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700 admin-only" data-screen="products">
+          <span>📦 6. Master Produk (Admin)</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('product-form')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700 admin-only" data-screen="product-form">
+          <span>📝 7. Form Produk (Admin)</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('price-history')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700 admin-only" data-screen="price-history">
+          <span>📈 8. Riwayat Harga (Admin)</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('reports')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700" data-screen="reports">
+          <span>📊 9. Laporan Penjualan</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('users')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700 admin-only" data-screen="users">
+          <span>👥 10. Kelola Pengguna (Admin)</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('user-form')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700 admin-only" data-screen="user-form">
+          <span>➕ 11. Tambah User (Admin)</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('more')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700" data-screen="more">
+          <span>⚙️ 12. Menu Lainnya</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+        <button onclick="showScreen('states')" class="screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700" data-screen="states">
+          <span>⚡ 13. Variasi State</span>
+          <i class="fa-solid fa-chevron-right text-[10px]"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Phone Device Simulation -->
+  <div class="phone-screen text-slate-800">
+    <!-- Status Bar -->
+    <div class="h-10 bg-emerald-600 text-white px-6 flex items-center justify-between text-xs font-semibold z-20 shrink-0">
+      <span>09:41</span>
+      <div class="w-20 h-4 bg-emerald-800 rounded-full mx-auto"></div>
+      <div class="flex items-center gap-1.5 text-[11px]">
+        <i class="fa-solid fa-signal"></i>
+        <i class="fa-solid fa-wifi"></i>
+        <i class="fa-solid fa-battery-full"></i>
+      </div>
+    </div>
+
+    <!-- Screen Content Area (Scrollable) -->
+    <div id="screenContainer" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col bg-[#FAFAFA] relative pb-20">
+
+      <!-- 1. LOGIN SCREEN -->
+      <div id="screen-login" class="screen-view p-6 flex flex-col justify-center min-h-full">
+        <div class="text-center mb-8">
+          <div class="w-20 h-20 bg-emerald-100 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-md mb-4 border border-emerald-200">
+            🥛
+          </div>
+          <h2 class="text-2xl font-bold text-slate-800 tracking-tight">JoyMilk</h2>
+          <p class="text-xs text-slate-500 font-medium mt-1">Pencatatan Order Susu Kedelai</p>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Email</label>
+            <div class="relative">
+              <input type="email" value="admin@joymilk.com" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:border-emerald-500 outline-none shadow-sm" readonly>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Password</label>
+            <div class="relative">
+              <input type="password" value="••••••••••••" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:border-emerald-500 outline-none shadow-sm" readonly>
+              <i class="fa-regular fa-eye absolute right-3.5 top-3.5 text-slate-400 text-xs"></i>
+            </div>
+          </div>
+
+          <button onclick="showScreen('dashboard')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm shadow-md shadow-emerald-600/30 transition flex items-center justify-center gap-2 mt-2">
+            <span>MASUK</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </button>
+        </div>
+
+        <p class="text-[11px] text-center text-slate-400 mt-10">v1.0.0 · Akses Khusus Tim Internal</p>
+      </div>
+
+      <!-- 2. DASHBOARD SCREEN -->
+      <div id="screen-dashboard" class="screen-view hidden">
+        <div class="bg-emerald-600 text-white p-5 pt-3 rounded-b-3xl shadow-sm">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-xs font-medium bg-emerald-700/60 px-2.5 py-1 rounded-full text-emerald-100 role-badge">👑 Administrator</span>
+            <button onclick="showScreen('login')" class="text-emerald-100 hover:text-white text-sm"><i class="fa-solid fa-right-from-bracket"></i></button>
+          </div>
+          <h2 class="text-xl font-bold" id="greetingName">Halo, Andi Prasetyo!</h2>
+          <p class="text-xs text-emerald-100 mt-0.5">Selasa, 10 November 2026</p>
+        </div>
+
+        <div class="p-4 space-y-4">
+          <!-- Metrics -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm">
+              <span class="text-[11px] font-semibold text-slate-500 block mb-1">Order Hari Ini</span>
+              <span class="text-xl font-bold text-slate-800">12</span>
+              <span class="text-[10px] text-emerald-600 font-medium block mt-0.5">↑ 4 pesanan baru</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm">
+              <span class="text-[11px] font-semibold text-slate-500 block mb-1">Penjualan Hari Ini</span>
+              <span class="text-lg font-bold text-slate-800">Rp 2.450.000</span>
+              <span class="text-[10px] text-emerald-600 font-medium block mt-0.5">100% lunas</span>
+            </div>
+          </div>
+
+          <!-- Quick Action -->
+          <button onclick="showScreen('order-form')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-2xl shadow-sm flex items-center justify-center gap-2 text-sm transition">
+            <i class="fa-solid fa-plus-circle"></i>
+            <span>BUAT ORDER BARU</span>
+          </button>
+
+          <!-- Recent Orders -->
+          <div>
+            <div class="flex justify-between items-center mb-2 px-1">
+              <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Order Terbaru</h3>
+              <button onclick="showScreen('orders')" class="text-xs text-emerald-600 font-semibold hover:underline">Lihat Semua</button>
+            </div>
+            <div class="space-y-2.5">
+              <div onclick="showScreen('order-detail')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-emerald-300 transition">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="font-bold text-xs text-slate-800">#ORD-001</span>
+                    <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Pending</span>
+                  </div>
+                  <p class="text-xs font-medium text-slate-700">Budi Santoso</p>
+                  <p class="text-[11px] text-slate-400">3 item · 14:30 WIB</p>
+                </div>
+                <div class="text-right">
+                  <span class="font-bold text-xs text-slate-800 block">Rp 35.000</span>
+                  <span class="text-[10px] text-slate-400">Tunai</span>
+                </div>
+              </div>
+
+              <div onclick="showScreen('order-detail')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-emerald-300 transition">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="font-bold text-xs text-slate-800">#ORD-002</span>
+                    <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">Diproses</span>
+                  </div>
+                  <p class="text-xs font-medium text-slate-700">Siti Rahayu</p>
+                  <p class="text-[11px] text-slate-400">1 item · 13:15 WIB</p>
+                </div>
+                <div class="text-right">
+                  <span class="font-bold text-xs text-slate-800 block">Rp 12.000</span>
+                  <span class="text-[10px] text-slate-400">Transfer</span>
+                </div>
+              </div>
+
+              <div onclick="showScreen('order-detail')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-emerald-300 transition">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="font-bold text-xs text-slate-800">#ORD-003</span>
+                    <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">Selesai</span>
+                  </div>
+                  <p class="text-xs font-medium text-slate-700">Agus Wijaya</p>
+                  <p class="text-[11px] text-slate-400">5 item · 11:00 WIB</p>
+                </div>
+                <div class="text-right">
+                  <span class="font-bold text-xs text-slate-800 block">Rp 58.000</span>
+                  <span class="text-[10px] text-slate-400">QRIS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. ORDER LIST SCREEN -->
+      <div id="screen-orders" class="screen-view hidden">
+        <div class="bg-white p-4 border-b border-slate-200 sticky top-0 z-10">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-base font-bold text-slate-800">Daftar Order</h2>
+            <div class="flex gap-2 text-slate-500">
+              <button class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+          </div>
+
+          <!-- Date Filters -->
+          <div class="flex gap-1.5 overflow-x-auto pb-1 text-[11px] font-semibold custom-scrollbar">
+            <button class="px-2.5 py-1 rounded-full bg-emerald-600 text-white shrink-0">Hari Ini</button>
+            <button class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 shrink-0">Minggu Ini</button>
+            <button class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 shrink-0">Bulan Ini</button>
+            <button class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 shrink-0">Semua</button>
+          </div>
+
+          <!-- Status Filters -->
+          <div class="flex gap-1.5 overflow-x-auto pt-2 text-[11px] font-semibold custom-scrollbar">
+            <button class="px-2.5 py-0.5 rounded-full bg-slate-800 text-white shrink-0">Semua (12)</button>
+            <button class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 shrink-0">Pending (3)</button>
+            <button class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 shrink-0">Diproses (2)</button>
+            <button class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">Selesai (7)</button>
+          </div>
+        </div>
+
+        <div class="p-4 space-y-3">
+          <!-- Item Card 1 -->
+          <div onclick="showScreen('order-detail')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-emerald-400 transition">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <span class="font-bold text-xs text-slate-800">#ORD-001</span>
+                <h4 class="text-sm font-semibold text-slate-800">Budi Santoso</h4>
+              </div>
+              <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">Pending</span>
+            </div>
+            <div class="text-xs text-slate-500 space-y-0.5 mb-2">
+              <p>• 2x Susu Original (Normal)</p>
+              <p>• 1x Susu Coklat (Less Sugar)</p>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs">
+              <span class="text-slate-400 text-[11px]">10 Nov, 14:30 · Tunai</span>
+              <span class="font-bold text-emerald-600 text-sm">Rp 35.000</span>
+            </div>
+          </div>
+
+          <!-- Item Card 2 -->
+          <div onclick="showScreen('order-detail')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-emerald-400 transition">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <span class="font-bold text-xs text-slate-800">#ORD-002</span>
+                <h4 class="text-sm font-semibold text-slate-800">Siti Rahayu</h4>
+              </div>
+              <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">Diproses</span>
+            </div>
+            <div class="text-xs text-slate-500 space-y-0.5 mb-2">
+              <p>• 1x Susu Coklat (Normal)</p>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs">
+              <span class="text-slate-400 text-[11px]">10 Nov, 13:15 · Transfer</span>
+              <span class="font-bold text-emerald-600 text-sm">Rp 12.000</span>
+            </div>
+          </div>
+
+          <!-- Item Card 3 -->
+          <div onclick="showScreen('order-detail')" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-emerald-400 transition">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <span class="font-bold text-xs text-slate-800">#ORD-003</span>
+                <h4 class="text-sm font-semibold text-slate-800">Agus Wijaya</h4>
+              </div>
+              <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Selesai</span>
+            </div>
+            <div class="text-xs text-slate-500 space-y-0.5 mb-2">
+              <p>• 3x Susu Matcha (Tanpa Gula)</p>
+              <p>• 2x Tahu Susu Kedelai</p>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs">
+              <span class="text-slate-400 text-[11px]">10 Nov, 11:00 · QRIS</span>
+              <span class="font-bold text-emerald-600 text-sm">Rp 58.000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAB -->
+        <button onclick="showScreen('order-form')" class="fixed bottom-24 right-8 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-3 rounded-full shadow-lg flex items-center gap-2 text-xs transition">
+          <i class="fa-solid fa-plus"></i>
+          <span>Buat Order</span>
+        </button>
+      </div>
+
+      <!-- 4. ORDER FORM SCREEN -->
+      <div id="screen-order-form" class="screen-view hidden">
+        <div class="bg-white p-4 border-b border-slate-200 flex items-center gap-3 sticky top-0 z-10">
+          <button onclick="showScreen('orders')" class="text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
+          <h2 class="text-base font-bold text-slate-800">Buat Order Baru</h2>
+        </div>
+
+        <div class="p-4 space-y-4">
+          <!-- Pelanggan -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-3">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Informasi Pelanggan</h3>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Pelanggan *</label>
+              <input type="text" value="Budi Santoso" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">No. Telepon (Opsional)</label>
+              <input type="tel" value="081234567890" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Alamat Pengiriman (Opsional)</label>
+              <textarea rows="2" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-500">Jl. Melati No. 12, RT 02/04</textarea>
+            </div>
+          </div>
+
+          <!-- Items Section -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider px-1">Item Pesanan</h3>
+            
+            <!-- Item 1 -->
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-2.5 relative">
+              <button class="absolute top-3 right-3 text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Pilih Produk</label>
+                <select class="w-full border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-medium bg-white outline-none">
+                  <option selected>Susu Kedelai Original (Rp 10.000)</option>
+                  <option>Susu Kedelai Coklat (Rp 12.000)</option>
+                </select>
+              </div>
+
+              <!-- Sweet Level Selector -->
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Sweet Level (Preferensi)</label>
+                <div class="grid grid-cols-4 gap-1 text-[10px] font-semibold text-center">
+                  <button type="button" class="py-1 px-1 rounded-lg border border-slate-200 text-slate-600">Tanpa</button>
+                  <button type="button" class="py-1 px-1 rounded-lg border border-slate-200 text-slate-600">Less</button>
+                  <button type="button" class="py-1 px-1 rounded-lg bg-emerald-600 text-white font-bold shadow-sm">Normal</button>
+                  <button type="button" class="py-1 px-1 rounded-lg border border-slate-200 text-slate-600">Extra</button>
+                </div>
+              </div>
+
+              <!-- Qty & Subtotal -->
+              <div class="flex justify-between items-center pt-1">
+                <div class="flex items-center gap-2 border border-slate-200 rounded-xl px-2 py-1">
+                  <button class="text-slate-500 text-xs px-1">-</button>
+                  <span class="text-xs font-bold w-4 text-center">2</span>
+                  <button class="text-slate-500 text-xs px-1">+</button>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-slate-400 block">Snapshot: Rp 10.000</span>
+                  <span class="font-bold text-xs text-emerald-600">Rp 20.000</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tambah Produk Button -->
+            <button class="w-full border-2 border-dashed border-emerald-400 text-emerald-700 bg-emerald-50/50 hover:bg-emerald-100 font-bold py-2.5 rounded-2xl text-xs flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-plus"></i>
+              <span>Tambah Produk Lainnya</span>
+            </button>
+          </div>
+
+          <!-- Pembayaran -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-2">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Metode Pembayaran</h3>
+            <div class="grid grid-cols-3 gap-1.5 text-xs font-semibold">
+              <button class="py-2 border-2 border-emerald-500 bg-emerald-50 text-emerald-700 rounded-xl">💵 Tunai</button>
+              <button class="py-2 border border-slate-200 text-slate-600 rounded-xl">🏦 Transfer</button>
+              <button class="py-2 border border-slate-200 text-slate-600 rounded-xl">📱 QRIS</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sticky Bottom -->
+        <div class="bg-white p-4 border-t border-slate-200 flex justify-between items-center sticky bottom-0 z-20 shadow-md">
+          <div>
+            <span class="text-[10px] text-slate-400 block font-medium">Total (2 Item)</span>
+            <span class="text-base font-extrabold text-emerald-600">Rp 20.000</span>
+          </div>
+          <button onclick="showScreen('order-detail')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md transition">
+            SIMPAN ORDER
+          </button>
+        </div>
+      </div>
+
+      <!-- 5. ORDER DETAIL SCREEN -->
+      <div id="screen-order-detail" class="screen-view hidden">
+        <div class="bg-white p-4 border-b border-slate-200 flex items-center justify-between sticky top-0 z-10">
+          <div class="flex items-center gap-3">
+            <button onclick="showScreen('orders')" class="text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 class="text-base font-bold text-slate-800">#ORD-001</h2>
+          </div>
+          <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold">Pending</span>
+        </div>
+
+        <div class="p-4 space-y-4">
+          <!-- Customer Info -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 text-xs space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Pelanggan</span>
+            <p class="font-bold text-slate-800 text-sm">Budi Santoso</p>
+            <p class="text-slate-500">📞 081234567890</p>
+            <p class="text-slate-500">📍 Jl. Melati No. 12, RT 02/04</p>
+          </div>
+
+          <!-- Items Snapshot -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 text-xs space-y-2.5">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Item Pesanan (Snapshot)</span>
+            
+            <div class="flex justify-between items-start pb-2 border-b border-slate-100">
+              <div>
+                <p class="font-semibold text-slate-800">Susu Kedelai Original</p>
+                <p class="text-[11px] text-slate-400">Sweet: Normal · 2 Botol @ Rp 10.000</p>
+              </div>
+              <span class="font-bold text-slate-700">Rp 20.000</span>
+            </div>
+
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="font-semibold text-slate-800">Susu Kedelai Coklat</p>
+                <p class="text-[11px] text-slate-400">Sweet: Less Sugar · 1 Botol @ Rp 12.000</p>
+              </div>
+              <span class="font-bold text-slate-700">Rp 12.000</span>
+            </div>
+
+            <div class="bg-emerald-50 p-3 rounded-xl flex justify-between items-center text-emerald-800 font-bold mt-2">
+              <span>Total Pembayaran</span>
+              <span class="text-base text-emerald-700">Rp 32.000</span>
+            </div>
+          </div>
+
+          <!-- Status Update Actions -->
+          <div class="space-y-2">
+            <button class="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Update Status ke: DIPROSES</span>
+            </button>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="showScreen('order-form')" class="py-2 border border-slate-300 font-semibold text-slate-700 rounded-xl text-xs hover:bg-slate-50">
+                ✏️ Edit Order
+              </button>
+              <button class="py-2 border border-red-200 text-red-600 font-semibold rounded-xl text-xs hover:bg-red-50">
+                ❌ Batalkan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. PRODUCT LIST SCREEN (ADMIN) -->
+      <div id="screen-products" class="screen-view hidden">
+        <div class="bg-white p-4 border-b border-slate-200 sticky top-0 z-10 flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <button onclick="showScreen('more')" class="text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 class="text-base font-bold text-slate-800">Master Produk</h2>
+          </div>
+          <button class="text-slate-500 text-xs"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+
+        <div class="p-4 space-y-3">
+          <div class="flex gap-1.5 overflow-x-auto pb-1 text-[11px] font-semibold custom-scrollbar">
+            <button class="px-2.5 py-1 rounded-full bg-emerald-600 text-white shrink-0">Semua (6)</button>
+            <button class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 shrink-0">Susu Kedelai</button>
+            <button class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 shrink-0">Susu Rasa</button>
+            <button class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 shrink-0">Snack</button>
+          </div>
+
+          <!-- Product Card 1 -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-semibold">Susu Kedelai</span>
+                <h4 class="text-sm font-bold text-slate-800">Susu Kedelai Original</h4>
+              </div>
+              <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Aktif</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="text-sm font-extrabold text-emerald-600">Rp 10.000</span>
+                <span class="text-[11px] text-slate-400"> / Botol</span>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="showScreen('price-history')" class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg font-semibold hover:bg-blue-100">
+                  📈 Riwayat
+                </button>
+                <button onclick="showScreen('product-form')" class="text-xs text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg font-semibold hover:bg-slate-200">
+                  ✏️ Edit
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Card 2 -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-semibold">Susu Rasa</span>
+                <h4 class="text-sm font-bold text-slate-800">Susu Kedelai Coklat</h4>
+              </div>
+              <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Aktif</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="text-sm font-extrabold text-emerald-600">Rp 12.000</span>
+                <span class="text-[11px] text-slate-400"> / Botol</span>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="showScreen('price-history')" class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg font-semibold">
+                  📈 Riwayat
+                </button>
+                <button onclick="showScreen('product-form')" class="text-xs text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg font-semibold">
+                  ✏️ Edit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="showScreen('product-form')" class="fixed bottom-24 right-8 bg-emerald-600 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-lg">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+
+      <!-- 7. PRODUCT FORM SCREEN (ADMIN) -->
+      <div id="screen-product-form" class="screen-view hidden">
+        <div class="bg-white p-4 border-b border-slate-200 flex items-center gap-3 sticky top-0 z-10">
+          <button onclick="showScreen('products')" class="text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
+          <h2 class="text-base font-bold text-slate-800">Edit Produk</h2>
+        </div>
+
+        <div class="p-4 space-y-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Produk *</label>
+            <input type="text" value="Susu Kedelai Original" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-500 font-medium">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Kategori *</label>
+            <select class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-medium bg-white">
+              <option selected>Susu Kedelai</option>
+              <option>Susu Kedelai Rasa</option>
+              <option>Snack</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Harga Saat Ini (Rp) *</label>
+            <input type="number" value="12000" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none focus:border-emerald-500 font-bold text-emerald-600">
+          </div>
+
+          <!-- Price Warning Banner -->
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 space-y-1">
+            <div class="flex items-center gap-1.5 font-bold">
+              <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+              <span>Perhatian Perubahan Harga</span>
+            </div>
+            <p class="text-amber-700">Harga sebelumnya Rp 10.000. Perubahan harga akan otomatis dicatat ke riwayat dan tidak mengubah harga transaksi lama.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Satuan Kemasan *</label>
+            <select class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-medium bg-white">
+              <option selected>Botol</option>
+              <option>Gelas</option>
+              <option>Pack</option>
+            </select>
+          </div>
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-xs font-semibold text-slate-700">Status Produk Aktif</span>
+            <div class="w-10 h-6 bg-emerald-500 rounded-full flex items-center justify-end px-1 cursor-pointer">
+              <div class="w-4 h-4 bg-white rounded-full shadow"></div>
+            </div>
+          </div>
+
+          <button onclick="showScreen('products')" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-xs shadow-md mt-4">
+            SIMPAN PRODUK
+          </button>
+        </div>
+      </div>
+
+      <!-- 8. PRICE HISTORY SCREEN (ADMIN) -->
+      <div id="screen-price-history" class="screen-view hidden">
+        <div class="bg-white p-4 border-b border-slate-200 flex items-center gap-3 sticky top-0 z-10">
+          <button onclick="showScreen('products')" class="text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
+          <div>
+            <h2 class="text-sm font-bold text-slate-800">Riwayat Harga</h2>
+            <p class="text-[10px] text-slate-400">Susu Kedelai Original</p>
+          </div>
+        </div>
+
+        <div class="p-4">
+          <div class="relative pl-6 border-l-2 border-emerald-500 space-y-6 my-2">
+            <!-- Timeline Item 1 -->
+            <div class="relative">
+              <div class="absolute -left-[31px] top-0 w-3.5 h-3.5 rounded-full bg-emerald-600 border-2 border-white"></div>
+              <span class="text-[10px] font-semibold text-slate-400">10 Nov 2026, 14:00 WIB</span>
+              <h4 class="text-sm font-bold text-slate-800">Rp 12.000</h4>
+              <p class="text-xs text-emerald-600 font-medium">Naik dari Rp 10.000</p>
+              <p class="text-[11px] text-slate-500">Oleh: Andi Prasetyo (Admin)</p>
+            </div>
+
+            <!-- Timeline Item 2 -->
+            <div class="relative">
+              <div class="absolute -left-[31px] top-0 w-3.5 h-3.5 rounded-full bg-slate-300 border-2 border-white"></div>
+              <span class="text-[10px] font-semibold text-slate-400">01 Okt 2026, 08:30 WIB</span>
+              <h4 class="text-sm font-bold text-slate-800">Rp 10.000</h4>
+              <p class="text-xs text-emerald-600 font-medium">Naik dari Rp 8.000</p>
+              <p class="text-[11px] text-slate-500">Oleh: Andi Prasetyo (Admin)</p>
+            </div>
+
+            <!-- Timeline Item 3 -->
+            <div class="relative">
+              <div class="absolute -left-[31px] top-0 w-3.5 h-3.5 rounded-full bg-slate-300 border-2 border-white"></div>
+              <span class="text-[10px] font-semibold text-slate-400">15 Agu 2026, 10:00 WIB</span>
+              <h4 class="text-sm font-bold text-slate-800">Rp 8.000</h4>
+              <p class="text-xs text-slate-500">Harga Peluncuran Pertama</p>
+              <p class="text-[11px] text-slate-500">Oleh: Andi Prasetyo (Admin)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. REPORT SCREEN -->
+      <div id="screen-reports" class="screen-view hidden">
+        <div class="bg-white p-4 border-b border-slate-200 sticky top-0 z-10">
+          <h2 class="text-base font-bold text-slate-800 mb-3">Laporan Penjualan</h2>
+          <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-center">
+            <button class="py-1 rounded-lg text-slate-600">Harian</button>
+            <button class="py-1 rounded-lg text-slate-600">Mingguan</button>
+            <button class="py-1 rounded-lg bg-emerald-600 text-white shadow-sm font-bold">Bulanan</button>
+          </div>
+        </div>
+
+        <div class="p-4 space-y-4">
+          <!-- Filter Periode -->
+          <div class="flex justify-between items-center bg-white p-3 rounded-2xl border border-slate-200 text-xs">
+            <span class="font-medium text-slate-500">Periode Terpilih:</span>
+            <span class="font-bold text-slate-800">November 2026 ▾</span>
+          </div>
+
+          <!-- Total Ringkasan -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200">
+              <span class="text-[10px] text-slate-400 font-semibold block">Total Transaksi</span>
+              <span class="text-lg font-bold text-slate-800">245</span>
+              <span class="text-[10px] text-slate-400 block">Pesanan</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200">
+              <span class="text-[10px] text-slate-400 font-semibold block">Total Omset</span>
+              <span class="text-lg font-bold text-emerald-600">Rp 4.90jt</span>
+              <span class="text-[10px] text-slate-400 block">Sesuai snapshot</span>
+            </div>
+          </div>
+
+          <!-- Ranking Terlaris -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-3">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">🏆 Produk Terlaris</h3>
+            
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between items-center pb-1.5 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center text-[10px]">1</span>
+                  <span class="font-semibold text-slate-800">Susu Kedelai Original</span>
+                </div>
+                <span class="font-bold text-slate-700">140 Botol</span>
+              </div>
+
+              <div class="flex justify-between items-center pb-1.5 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[10px]">2</span>
+                  <span class="font-semibold text-slate-800">Susu Kedelai Coklat</span>
+                </div>
+                <span class="font-bold text-slate-700">65 Botol</span>
+              </div>
+
+              <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-amber-50 text-amber-900 font-bold flex items-center justify-center text-[10px]">3</span>
+                  <span class="font-semibold text-slate-800">Susu Kedelai Matcha</span>
+                </div>
+                <span class="font-bold text-slate-700">40 Gelas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. USER LIST SCREEN (ADMIN) -->
+      <div id="screen-users" class="screen-view hidden">
+        <div class="bg-white p-4 border-b border-slate-200 flex items-center gap-3 sticky top-0 z-10">
+          <button onclick="showScreen('more')" class="text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
+          <h2 class="text-base font-bold text-slate-800">Kelola Pengguna</h2>
+        </div>
+
+        <div class="p-4 space-y-3">
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-sm font-bold text-slate-800">Andi Prasetyo</h4>
+                <span class="text-[9px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">ADMIN</span>
+              </div>
+              <p class="text-xs text-slate-400">admin@joymilk.com</p>
+            </div>
+            <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Aktif</span>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-sm font-bold text-slate-800">Maya Sari</h4>
+                <span class="text-[9px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">STAFF</span>
+              </div>
+              <p class="text-xs text-slate-400">maya@joymilk.com</p>
+            </div>
+            <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Aktif</span>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-sm font-bold text-slate-800">Lina Wijaya</h4>
+                <span class="text-[9px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">STAFF</span>
+              </div>
+              <p class="text-xs text-slate-400">lina@joymilk.com</p>
+            </div>
+            <span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">Nonaktif</span>
+          </div>
+        </div>
+
+        <button onclick="showScreen('user-form')" class="fixed bottom-24 right-8 bg-emerald-600 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-lg">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+
+      <!-- 11. USER FORM SCREEN (ADMIN) -->
+      <div id="screen-user-form" class="screen-view hidden">
+        <div class="bg-white p-4 border-b border-slate-200 flex items-center gap-3 sticky top-0 z-10">
+          <button onclick="showScreen('users')" class="text-slate-600"><i class="fa-solid fa-arrow-left"></i></button>
+          <h2 class="text-base font-bold text-slate-800">Tambah Pengguna</h2>
+        </div>
+
+        <div class="p-4 space-y-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap *</label>
+            <input type="text" placeholder="Masukkan nama..." class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Email *</label>
+            <input type="email" placeholder="karyawan@joymilk.com" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Password Sementara *</label>
+            <input type="password" value="Password123" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Peran (Role) *</label>
+            <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+              <button class="py-2.5 border-2 border-emerald-500 bg-emerald-50 text-emerald-700 rounded-xl">Staff (Order)</button>
+              <button class="py-2.5 border border-slate-200 text-slate-600 rounded-xl">Administrator</button>
+            </div>
+          </div>
+
+          <button onclick="showScreen('users')" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-xs shadow-md mt-4">
+            SIMPAN PENGGUNA
+          </button>
+        </div>
+      </div>
+
+      <!-- 12. MORE / SETTINGS SCREEN -->
+      <div id="screen-more" class="screen-view hidden">
+        <div class="bg-white p-4 border-b border-slate-200 sticky top-0 z-10">
+          <h2 class="text-base font-bold text-slate-800">Menu Lainnya</h2>
+        </div>
+
+        <div class="p-4 space-y-4">
+          <!-- Profile Box -->
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg">
+              AP
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-slate-800" id="profileName">Andi Prasetyo</h4>
+              <p class="text-xs text-slate-400" id="profileEmail">admin@joymilk.com</p>
+              <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold mt-1 inline-block role-badge">👑 Administrator</span>
+            </div>
+          </div>
+
+          <!-- Admin Section -->
+          <div class="space-y-2 admin-only">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Master Data (Admin)</span>
+            <div class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden text-xs">
+              <div onclick="showScreen('products')" class="p-3.5 flex justify-between items-center cursor-pointer hover:bg-slate-50">
+                <div class="flex items-center gap-3">
+                  <span class="text-emerald-600 text-base">📦</span>
+                  <div>
+                    <p class="font-semibold text-slate-800">Master Data Produk</p>
+                    <p class="text-[10px] text-slate-400">Atur produk, harga & satuan</p>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+              </div>
+
+              <div onclick="showScreen('users')" class="p-3.5 flex justify-between items-center cursor-pointer hover:bg-slate-50">
+                <div class="flex items-center gap-3">
+                  <span class="text-purple-600 text-base">👥</span>
+                  <div>
+                    <p class="font-semibold text-slate-800">Kelola Pengguna</p>
+                    <p class="text-[10px] text-slate-400">Atur hak akses staf & admin</p>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- App & Logout -->
+          <div class="space-y-2">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Sistem</span>
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden text-xs">
+              <div onclick="showScreen('login')" class="p-3.5 flex justify-between items-center cursor-pointer text-red-600 hover:bg-red-50">
+                <div class="flex items-center gap-3">
+                  <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
+                  <span class="font-semibold">Keluar dari Akun</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-red-300 text-xs"></i>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-center text-[10px] text-slate-400 pt-4">JoyMilk App v1.0.0 (Build 1)</p>
+        </div>
+      </div>
+
+      <!-- 13. STATE VARIATIONS SCREEN -->
+      <div id="screen-states" class="screen-view hidden p-4 space-y-4">
+        <h2 class="text-base font-bold text-slate-800 mb-2">⚡ Variasi State UI</h2>
+
+        <!-- Empty State -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 text-center space-y-2">
+          <span class="text-3xl block">📦</span>
+          <h4 class="text-sm font-bold text-slate-800">Belum Ada Pesanan</h4>
+          <p class="text-xs text-slate-400">Tidak ada data order pada periode yang dipilih.</p>
+          <button class="mt-2 bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs">Buat Order Sekarang</button>
+        </div>
+
+        <!-- Network Error State -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 text-center space-y-2">
+          <span class="text-3xl block">⚠️</span>
+          <h4 class="text-sm font-bold text-red-600">Koneksi Terputus</h4>
+          <p class="text-xs text-slate-400">Gagal tersambung ke Firestore. Data lokal tersimpan.</p>
+          <button class="mt-2 border border-slate-300 font-semibold px-4 py-2 rounded-xl text-xs hover:bg-slate-50">Coba Lagi</button>
+        </div>
+
+        <!-- Form Validation Error -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 space-y-3">
+          <h4 class="text-xs font-bold text-slate-700 uppercase">Validasi Input Error</h4>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Pelanggan *</label>
+            <input type="text" value="" class="w-full border-2 border-red-500 rounded-xl px-3 py-2 text-xs outline-none bg-red-50/20">
+            <span class="text-[10px] text-red-600 font-semibold block mt-1">❗ Nama pelanggan wajib diisi</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 13. BOTTOM NAVIGATION BAR -->
+    <div id="bottomNav" class="h-16 bg-white border-t border-slate-200 flex items-center justify-around px-2 absolute bottom-0 left-0 right-0 z-30 shadow-lg">
+      <button onclick="showScreen('dashboard')" class="nav-item flex flex-col items-center gap-1 text-emerald-600 font-bold transition flex-1 py-1" data-tab="dashboard">
+        <i class="fa-solid fa-house text-base"></i>
+        <span class="text-[10px]">Beranda</span>
+      </button>
+
+      <button onclick="showScreen('orders')" class="nav-item flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 font-semibold transition flex-1 py-1" data-tab="orders">
+        <i class="fa-solid fa-receipt text-base"></i>
+        <span class="text-[10px]">Order</span>
+      </button>
+
+      <button onclick="showScreen('reports')" class="nav-item flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 font-semibold transition flex-1 py-1" data-tab="reports">
+        <i class="fa-solid fa-chart-simple text-base"></i>
+        <span class="text-[10px]">Laporan</span>
+      </button>
+
+      <button onclick="showScreen('more')" class="nav-item flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 font-semibold transition flex-1 py-1" data-tab="more">
+        <i class="fa-solid fa-bars text-base"></i>
+        <span class="text-[10px]">Lainnya</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let currentRole = 'admin';
+
+    function setRole(role) {
+      currentRole = role;
+      const btnAdmin = document.getElementById('btnRoleAdmin');
+      const btnStaff = document.getElementById('btnRoleStaff');
+      const adminElements = document.querySelectorAll('.admin-only');
+
+      if (role === 'admin') {
+        btnAdmin.className = "py-2 px-3 text-xs font-bold rounded-xl transition bg-emerald-600 text-white shadow";
+        btnStaff.className = "py-2 px-3 text-xs font-bold rounded-xl transition bg-slate-700 text-slate-300 hover:bg-slate-600";
+        adminElements.forEach(el => el.classList.remove('hidden'));
+        document.querySelectorAll('.role-badge').forEach(el => el.textContent = '👑 Administrator');
+        document.getElementById('greetingName').textContent = 'Halo, Andi Prasetyo!';
+        document.getElementById('profileName').textContent = 'Andi Prasetyo';
+        document.getElementById('profileEmail').textContent = 'admin@joymilk.com';
+      } else {
+        btnStaff.className = "py-2 px-3 text-xs font-bold rounded-xl transition bg-emerald-600 text-white shadow";
+        btnAdmin.className = "py-2 px-3 text-xs font-bold rounded-xl transition bg-slate-700 text-slate-300 hover:bg-slate-600";
+        adminElements.forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.role-badge').forEach(el => el.textContent = '💼 Staff Operasional');
+        document.getElementById('greetingName').textContent = 'Halo, Maya Sari!';
+        document.getElementById('profileName').textContent = 'Maya Sari';
+        document.getElementById('profileEmail').textContent = 'maya@joymilk.com';
+      }
+    }
+
+    function showScreen(screenId) {
+      // Hide all screen views
+      document.querySelectorAll('.screen-view').forEach(view => {
+        view.classList.add('hidden');
+      });
+
+      // Show target screen
+      const target = document.getElementById('screen-' + screenId);
+      if (target) {
+        target.classList.remove('hidden');
+      }
+
+      // Hide bottom nav on login or order-form
+      const bottomNav = document.getElementById('bottomNav');
+      if (screenId === 'login' || screenId === 'order-form') {
+        bottomNav.classList.add('hidden');
+      } else {
+        bottomNav.classList.remove('hidden');
+      }
+
+      // Update sidebar button highlights
+      document.querySelectorAll('.screen-btn').forEach(btn => {
+        if (btn.getAttribute('data-screen') === screenId) {
+          btn.className = "screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        } else {
+          btn.className = "screen-btn w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-between text-slate-300 hover:bg-slate-700" + (btn.classList.contains('admin-only') ? ' admin-only' : '');
+        }
+      });
+
+      // Update bottom nav highlights
+      document.querySelectorAll('.nav-item').forEach(nav => {
+        if (nav.getAttribute('data-tab') === screenId) {
+          nav.className = "nav-item flex flex-col items-center gap-1 text-emerald-600 font-bold transition flex-1 py-1";
+        } else {
+          nav.className = "nav-item flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 font-semibold transition flex-1 py-1";
+        }
+      });
+
+      // Scroll to top
+      document.getElementById('screenContainer').scrollTop = 0;
+    }
+
+    // Initialize default screen
+    showScreen('dashboard');
+  </script>
+</body>
+</html>
+
