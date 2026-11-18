@@ -96,7 +96,7 @@ private fun MetricCard(label: String, value: String, modifier: Modifier = Modifi
 }
 
 @Composable
-private fun TopProductRow(rank: Int, name: String, qty: Int) {
+private fun TopProductRow(rank: Int, name: String, qty: Long) {
     ElevatedCard(elevation = CardDefaults.elevatedCardElevation(1.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),

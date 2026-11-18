@@ -9,7 +9,7 @@
 
 You are working on **JoyMilk** — an internal Android app for a soy milk (susu kedelai) business.
 It records orders, manages products, tracks price history, and generates sales reports.
-2–5 internal users, cloud-synced via Firebase. UI entirely in **Bahasa Indonesia**.
+2–5 internal users. The app uses Supabase Postgres through Vercel and keeps Firebase Auth. Deployment status is tracked in the implementation plan. UI entirely in **Bahasa Indonesia**.
 
 ---
 
@@ -40,12 +40,12 @@ Take the first option that fully works:
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Kotlin (no Java, ever) |
+| Language | Kotlin for Android, TypeScript for the Vercel backend |
 | UI | Jetpack Compose + Material 3 |
 | Navigation | Compose Navigation (single-activity) |
-| Architecture | MVVM — Screen → ViewModel → Repository → Firebase |
+| Architecture | MVVM — Screen → ViewModel → Repository → Vercel API |
 | DI | Hilt (`@HiltViewModel`, `@Inject`, `@Module`) |
-| Backend | Firebase Firestore + Firebase Auth |
+| Backend | Vercel (Next.js on Node.js), Supabase Postgres and Realtime, Firebase Auth |
 | State | `StateFlow` (never `LiveData`) |
 | Build | Gradle Kotlin DSL, version catalog (`libs.versions.toml`) |
 
@@ -56,7 +56,7 @@ Take the first option that fully works:
 ```
 com.joymilk.app/
 ├── data/model/         # Data classes (User, Product, Order, OrderItem, PriceHistory, SweetLevel)
-├── data/repository/    # Firebase operations (AuthRepo, OrderRepo, ProductRepo, ReportRepo, UserRepo)
+├── data/repository/    # Backend API repositories (AuthRepo, OrderRepo, ProductRepo, ReportRepo, UserRepo)
 ├── di/                 # Hilt modules (AppModule)
 ├── ui/auth/            # Login screen + ViewModel
 ├── ui/dashboard/       # Dashboard screen + ViewModel
@@ -78,9 +78,7 @@ com.joymilk.app/
 When creating an order, **snapshot** the product's `currentPrice` into the order item's `priceAtOrder`. The order item also snapshots `productName`. These fields are immutable after creation. Reports use `priceAtOrder`, never `currentPrice`.
 
 ### Price History Auto-tracking
-When admin updates a product's price, a `priceHistory` subcollection entry is auto-created in a Firestore **transaction**:
-1. Update `products/{id}.currentPrice`
-2. Create `products/{id}/priceHistory/{newId}` with the new price, timestamp, and who changed it
+When an admin changes a price, update the product and insert its `price_history` row in one Postgres transaction. Record the price, timestamp, and actor.
 
 ### Sweet Level
 Per order item: `Tanpa Gula | Less Sugar | Normal | Extra Sweet`. Preference only — **does not affect price**.
@@ -91,7 +89,7 @@ All money stored as `Long` (IDR, no decimals). Rp 10.000 → `10000`. Format for
 ### Role-Based Access
 - **Admin**: Full CRUD on products, users, orders. Manage master data.
 - **Staff**: Create/read/update orders, read products. Cannot manage products or users.
-- Check role in both Firestore security rules AND app-level navigation/UI guards.
+- Check active profiles and roles at the API and enforce navigation and UI guards in Android.
 
 ---
 
@@ -109,22 +107,15 @@ All money stored as `Long` (IDR, no decimals). Rp 10.000 → `10000`. Format for
 
 ---
 
-## Firestore Collections
+## Business Data
 
-```
-/users/{userId}             → name, email, role, isActive, createdAt
-/products/{productId}       → name, category, currentPrice, unit, isActive, ...
-  └─ /priceHistory/{id}     → price, effectiveDate, changedBy
-/orders/{orderId}           → customerName, customerPhone?, deliveryAddress?, paymentMethod, status, totalAmount, createdBy, notes?, ...
-  └─ /items/{itemId}        → productId, productName↑, priceAtOrder↑, quantity, subtotal, sweetLevel
-                               ↑ = snapshot, immutable
-```
+See [database schema](docs/DATABASE_SCHEMA.md) and [API contracts](docs/TRD.md). Android, Telegram, and MCP share the backend order service. Preserve the legacy deployment and Firestore archive until the phased cutover in [the implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
 ---
 
 ## Security & Safety — NEVER cut these
 
-- Trust-boundary validation (Firestore security rules)
+- Validate input and authorization at the API. Restrict business-table grants to server roles.
 - Role-based access enforcement
 - Data-loss prevention (transactions for multi-doc writes)
 - Price snapshot integrity

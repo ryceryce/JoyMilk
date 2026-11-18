@@ -167,7 +167,7 @@
 │  │ #ORD-003                  10 Nov, 11:00 │ │
 │  │ Agus Wijaya                 [ Selesai ] │ │
 │  │ 3x Susu Matcha, 2x Tahu Susu            │ │
-│  │ Total: Rp 58.000               E-Wallet │ │
+│  │ Total: Rp 58.000               QRIS    │ │
 │  └─────────────────────────────────────────┘ │
 │                                              │
 │                               ┌────────────┐ │
@@ -399,7 +399,7 @@
 ```
 
 **Komponen & Spesifikasi:**
-- **Price Change Detection:** Jika user mengubah nilai `currentPrice`, aplikasi memunculkan banner alert peringatan otomatis bahwa perubahan harga akan diabadikan di `priceHistory` Firestore transaction.
+- **Price Change Detection:** Jika user mengubah nilai `currentPrice`, aplikasi memunculkan banner alert peringatan otomatis bahwa perubahan harga akan dicatat dalam riwayat harga melalui transaksi backend.
 
 ---
 
@@ -676,8 +676,8 @@
 │                                              │
 │                    ⚠️                        │
 │             Koneksi Terputus                 │
-│      Gagal terhubung ke Cloud Firestore.     │
-│      Data tersimpan secara offline.          │
+│      Coba lagi setelah koneksi pulih.       │
+│      Isian form tetap tersedia.              │
 │                                              │
 │            ┌─────────────────┐               │
 │            │    COBA LAGI    │               │

@@ -50,13 +50,20 @@ fun JoyMilkNavGraph(
     authRepository: AuthRepository,
     modifier: Modifier = Modifier
 ) {
-    val startDestination = if (authRepository.isLoggedIn) Routes.DASHBOARD else Routes.LOGIN
+    val startDestination = remember { if (authRepository.isLoggedIn) Routes.DASHBOARD else Routes.LOGIN }
 
     var userRole by remember { mutableStateOf(Constants.ROLE_STAFF) }
 
     LaunchedEffect(authRepository.isLoggedIn) {
         if (authRepository.isLoggedIn) {
-            userRole = authRepository.getUserRole(authRepository.currentUser!!.uid)
+            runCatching { authRepository.getUserRole() }
+                .onSuccess { userRole = it }
+                .onFailure { error ->
+                    if (error is com.joymilk.app.data.repository.ApiFailure && error.status in listOf(401, 403)) {
+                        authRepository.logout()
+                        navController.navigate(Routes.LOGIN) { popUpTo(Routes.DASHBOARD) { inclusive = true } }
+                    }
+                }
         }
     }
 

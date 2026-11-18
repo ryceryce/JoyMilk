@@ -17,6 +17,11 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
+        for (key in listOf("JOYMILK_API_URL", "SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY")) {
+            val value = providers.gradleProperty(key).orElse(providers.environmentVariable(key)).getOrElse("")
+            require(value.none { it == '"' || it == '\\' || it.isWhitespace() }) { "Invalid $key" }
+            buildConfigField("String", key, "\"$value\"")
+        }
     }
 
     buildTypes {
@@ -41,6 +46,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -71,7 +77,7 @@ dependencies {
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore)
+    implementation(libs.okhttp)
 
     // Coroutines
     implementation(libs.coroutines.android)

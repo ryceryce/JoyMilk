@@ -85,8 +85,13 @@ fun OrderListScreen(
             }
             when (val state = listState) {
                 is OrderListUiState.Loading -> LoadingIndicator()
-                is OrderListUiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                is OrderListUiState.Error -> Column(
+                    Modifier.fillMaxSize().padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Text(state.message, color = MaterialTheme.colorScheme.error)
+                    TextButton(onClick = viewModel::loadOrders) { Text("Coba Lagi") }
                 }
                 is OrderListUiState.Success -> {
                     if (state.orders.isEmpty()) {
@@ -130,7 +135,7 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
             }
             Spacer(Modifier.height(4.dp))
             Text(
-                text = DateUtils.formatDate(order.createdAt.toDate()),
+                text = DateUtils.formatDate(order.createdAt),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -1,9 +1,8 @@
 # PRD — JoyMilk: Aplikasi Pencatatan Order Susu Kedelai
 
-> **Versi Dokumen:** 1.0  
-> **Terakhir Diperbarui:** 10 November 2026  
-> **Status:** Draft  
-> **Penulis:** Tim JoyMilk
+> **Versi Dokumen:** 1.1 · **Terakhir Diperbarui:** 18 November 2026
+>
+> **Status:** Desain target · **Penulis:** Tim JoyMilk
 
 ---
 
@@ -15,13 +14,13 @@
 | **Tipe** | Aplikasi Android internal |
 | **Target User** | Tim internal bisnis susu kedelai (2–5 orang) |
 | **Tujuan** | Pencatatan orderan, manajemen produk, dan laporan penjualan |
-| **Tech Stack** | Kotlin, Jetpack Compose, Material 3, Firebase (Firestore + Auth) |
+| **Tech Stack** | Kotlin, Jetpack Compose, Material 3, Firebase Auth, Vercel, Supabase Postgres |
 | **Arsitektur** | MVVM + Clean Architecture, Hilt DI |
 | **Package** | `com.joymilk.app` |
 | **Bahasa UI** | Bahasa Indonesia |
 | **Mata Uang** | IDR (Rupiah), disimpan sebagai `Long` |
 
-JoyMilk adalah aplikasi Android internal yang dirancang untuk mendigitalisasi proses pencatatan order pada bisnis susu kedelai. Aplikasi ini memungkinkan tim kecil (2–5 orang) untuk mencatat order, mengelola master data produk, dan melihat laporan penjualan — semuanya tersinkronisasi secara real-time melalui Firebase Firestore.
+JoyMilk adalah aplikasi Android internal yang dirancang untuk mendigitalisasi proses pencatatan order pada bisnis susu kedelai. Aplikasi ini memungkinkan tim kecil (2–5 orang) untuk mencatat order, mengelola master data produk, dan melihat laporan penjualan — data dibaca melalui API Vercel dan diperbarui melalui Supabase Realtime. Dokumen ini menjelaskan perilaku produk untuk deployment Supabase. Lihat [status implementasi](IMPLEMENTATION_PLAN.md).
 
 ---
 
@@ -46,7 +45,7 @@ Bisnis susu kedelai skala kecil–menengah sering kali masih mengandalkan pencat
 Membangun aplikasi Android internal yang:
 
 - Mencatat semua order secara digital
-- Tersinkronisasi otomatis antar device via cloud (Firestore)
+- Tersinkronisasi otomatis antar perangkat, termasuk untuk order dari Telegram atau MCP
 - Mengelola master data produk dengan riwayat harga
 - Menghasilkan laporan penjualan harian, mingguan, dan bulanan
 - Mengatur akses berdasarkan role (admin/staff)
@@ -108,7 +107,7 @@ Membangun aplikasi Android internal yang:
 | AUTH-03 | Auto-login: user tetap logged in setelah restart app | P0 |
 | AUTH-04 | Logout: hapus session dan kembali ke login screen | P0 |
 | AUTH-05 | Tampilkan error message yang jelas saat login gagal | P0 |
-| AUTH-06 | Role disimpan di Firestore collection `users` | P0 |
+| AUTH-06 | Role dan status aktif tersimpan di profil Supabase berdasarkan Firebase UID | P0 |
 
 **User Flow — Autentikasi:**
 
@@ -119,7 +118,7 @@ flowchart TD
     B -- Tidak --> D["Tampilkan Login Screen"]
     D --> E["Input Email & Password"]
     E --> F{"Firebase Auth"}
-    F -- Berhasil --> G["Ambil Data User dari Firestore"]
+    F -- Berhasil --> G["Ambil Profil Pengguna dari API"]
     G --> H{"User Aktif?"}
     H -- Ya --> C
     H -- Tidak --> I["Tampilkan Error: Akun Nonaktif"]
@@ -165,15 +164,15 @@ flowchart TD
 | ORD-04 | Sweet level adalah preferensi saja, **tidak mempengaruhi harga** | P0 |
 | ORD-05 | Harga otomatis diambil dari master data saat order dibuat (price snapshot) | P0 |
 | ORD-06 | Total harga dihitung otomatis dari semua item | P0 |
-| ORD-07 | Metode pembayaran: Cash, Transfer Bank, E-Wallet | P0 |
-| ORD-08 | Status order: Pending → Processing → Delivered / Cancelled | P0 |
+| ORD-07 | Metode pembayaran: Tunai, Transfer, QRIS | P0 |
+| ORD-08 | Status order: Pending → Diproses → Selesai, atau Pending → Dibatalkan | P0 |
 | ORD-09 | Filter & search order (by nama, status, tanggal) | P0 |
 | ORD-10 | Edit order hanya jika status masih **Pending** | P0 |
 | ORD-11 | Catat waktu pembuatan order (`createdAt`) | P0 |
 | ORD-12 | Catat user yang membuat order (`createdBy`) | P0 |
 
 > [!IMPORTANT]
-> **Price Snapshot Pattern:** Saat order dibuat, harga setiap item di-copy dari master data produk dan disimpan di subcollection `orders/{id}/items`. Ini memastikan laporan dan riwayat order selalu menampilkan harga yang benar pada saat transaksi, meskipun harga produk berubah di kemudian hari.
+> **Price Snapshot Pattern:** Saat order dibuat, harga setiap item di-copy dari master data produk dan disimpan di tabel `order_items`. Ini memastikan laporan dan riwayat order selalu menampilkan harga yang benar pada saat transaksi, meskipun harga produk berubah di kemudian hari.
 
 **User Flow — Buat Order Baru:**
 
@@ -188,7 +187,7 @@ flowchart TD
     F -- Tidak --> G["Review Order"]
     G --> H["Pilih Metode Pembayaran"]
     H --> I["Konfirmasi Order"]
-    I --> J["Simpan ke Firestore"]
+    I --> J["Simpan melalui API backend"]
     J --> K["Price Snapshot Disimpan"]
     K --> L["Order Tersimpan — Status: Pending"]
 ```
@@ -198,12 +197,11 @@ flowchart TD
 ```mermaid
 stateDiagram-v2
     [*] --> Pending: Order Dibuat
-    Pending --> Processing: Mulai Diproses
-    Pending --> Cancelled: Dibatalkan
-    Processing --> Delivered: Selesai Dikirim
-    Processing --> Cancelled: Dibatalkan
-    Delivered --> [*]
-    Cancelled --> [*]
+    Pending --> Diproses: Mulai Diproses
+    Pending --> Dibatalkan: Dibatalkan
+    Diproses --> Selesai: Selesai Dikirim
+    Selesai --> [*]
+    Dibatalkan --> [*]
 ```
 
 ---
@@ -219,7 +217,7 @@ stateDiagram-v2
 | PROD-01 | CRUD produk: nama, kategori, harga, satuan, deskripsi | P0 |
 | PROD-02 | Satuan produk: botol, liter, pack | P0 |
 | PROD-03 | Aktifkan / nonaktifkan produk (soft delete) | P0 |
-| PROD-04 | Otomatis simpan riwayat perubahan harga di subcollection `priceHistory` | P0 |
+| PROD-04 | Catat harga baru di tabel `price_history` dalam transaksi yang sama dengan update produk | P0 |
 | PROD-05 | Lihat riwayat harga per produk (dari harga lama ke harga baru + tanggal) | P0 |
 | PROD-06 | Staff hanya bisa melihat daftar produk aktif (read-only) | P0 |
 | PROD-07 | Harga disimpan sebagai `Long` dalam satuan IDR (tanpa floating point) | P0 |
@@ -234,12 +232,11 @@ flowchart TD
     C --> D{"Aksi?"}
     D -- Tambah --> E["Form Tambah Produk"]
     E --> F["Input: Nama, Kategori, Harga, Satuan, Deskripsi"]
-    F --> G["Simpan ke Firestore"]
+    F --> G["Simpan melalui API backend"]
     D -- Edit --> H["Form Edit Produk"]
     H --> I{"Harga Berubah?"}
-    I -- Ya --> J["Simpan Harga Lama ke priceHistory"]
-    J --> K["Update Produk"]
-    I -- Tidak --> K
+    I -- Ya --> J["Update Produk dan Simpan Riwayat Harga Baru dalam Satu Transaksi"]
+    I -- Tidak --> K["Update Produk"]
     D -- Toggle Status --> L["Aktifkan / Nonaktifkan Produk"]
     D -- Lihat Riwayat --> M["Tampilkan Riwayat Harga"]
 ```
@@ -260,7 +257,7 @@ flowchart TD
 | RPT-04 | Produk terlaris berdasarkan jumlah quantity terjual | P1 |
 | RPT-05 | Filter laporan berdasarkan rentang tanggal (date range) | P1 |
 | RPT-06 | Harga di laporan menggunakan price snapshot dari order | P1 |
-| RPT-07 | Hanya menghitung order dengan status **Delivered** | P1 |
+| RPT-07 | Menghitung semua order kecuali yang berstatus **Dibatalkan** | P1 |
 
 ---
 
@@ -283,13 +280,22 @@ flowchart TD
 
 | ID | Requirement | Detail | Prioritas |
 |---|---|---|:---:|
-| NF-01 | Offline Support | Firestore offline persistence — app tetap bisa digunakan tanpa internet, sync otomatis saat online | P0 |
-| NF-02 | Real-time Sync | Data tersinkronisasi secara real-time antar device menggunakan Firestore snapshot listener | P0 |
+| NF-01 | Offline Support | Form mempertahankan isian saat koneksi putus dan menawarkan coba lagi saat online | P0 |
+| NF-02 | Real-time Sync | Supabase Realtime memberi sinyal saat data berubah dan Android mengambil data terbaru dari API | P0 |
 | NF-03 | Min SDK | API 26 (Android 8.0 Oreo) | P0 |
 | NF-04 | Bahasa UI | Bahasa Indonesia | P0 |
 | NF-05 | Mata Uang | IDR (Rupiah), disimpan sebagai `Long` | P0 |
 | NF-06 | Performa | App launch < 3 detik, navigasi halaman < 1 detik | P1 |
-| NF-07 | Keamanan | Firebase Security Rules untuk enforce role-based access | P0 |
+| NF-07 | Keamanan | API memeriksa Firebase UID, role, dan profil aktif. Tabel bisnis hanya dapat ditulis melalui backend. | P0 |
+
+---
+
+### 4.8 Order dari Telegram dan MCP
+
+- Staf yang tertaut mengirim pesan privat dalam Bahasa Indonesia. Bot meminta data yang kurang atau meminta pilihan saat produk ambigu.
+- Bot menampilkan ringkasan item, kuantitas, tingkat kemanisan, pembayaran, harga, dan total. Order disimpan setelah staf menekan **Konfirmasi**.
+- Klien AI internal yang diotorisasi dapat menyiapkan draf dan menyimpan order lewat MCP setelah meminta konfirmasi di klien.
+- Order yang berhasil disimpan mendapat ID dan tampil di Android secara realtime. Pengiriman ulang tidak menambah order duplikat.
 
 ---
 
@@ -301,7 +307,7 @@ Fitur-fitur berikut **tidak** termasuk dalam scope versi pertama (v1) JoyMilk:
 |---|---|
 | 🍎 iOS Support | Fokus ke Android untuk tim internal |
 | 👤 Customer-Facing App | App hanya untuk internal, bukan untuk pelanggan |
-| 💳 Online Payment Gateway | Pembayaran dicatat manual (cash/transfer/e-wallet) |
+| 💳 Online Payment Gateway | Pembayaran dicatat manual (tunai, transfer, atau QRIS) |
 | 🔔 Push Notifications | Belum dibutuhkan untuk skala 2–5 user |
 | 📄 Export PDF / Excel | Laporan cukup dilihat di app untuk v1 |
 | 🏢 Multi-Branch / Outlet Support | Saat ini hanya satu outlet |
@@ -322,157 +328,17 @@ Fitur-fitur berikut **tidak** termasuk dalam scope versi pertama (v1) JoyMilk:
 
 ---
 
-## 7. Timeline & Milestones
+## 7. Tahapan Implementasi
 
-```mermaid
-flowchart LR
-    P1["Phase 1\nFoundation + Auth"]
-    P2["Phase 2\nProduct Management"]
-    P3["Phase 3\nOrder Management"]
-    P4["Phase 4\nDashboard + Reports"]
-    P5["Phase 5\nUser Management\n+ Polish"]
-
-    P1 --> P2 --> P3 --> P4 --> P5
-```
-
-### Detail Per Phase
-
-| Phase | Nama | Scope | Deliverable |
-|:---:|---|---|---|
-| **1** | Foundation + Auth | Setup project, Firebase config, login/logout, role check | App bisa login, routing by role |
-| **2** | Product Management | CRUD produk, kategori, riwayat harga, role guard | Admin bisa kelola master data produk |
-| **3** | Order Management | Input order, multi-item, sweet level, price snapshot, status flow | Order bisa dicatat dan dikelola |
-| **4** | Dashboard + Reports | Dashboard ringkasan, rekap harian/mingguan/bulanan, filter | Laporan penjualan tersedia |
-| **5** | User Management + Polish | CRUD user, UI polish, testing, bug fixing | App siap digunakan sehari-hari |
-
----
+Backend Supabase dan integrasi Android menjadi tahap pertama. Realtime, MCP, dan Telegram menyusul setelah transaksi order lulus pengujian. Lihat [rencana implementasi](IMPLEMENTATION_PLAN.md).
 
 ## 8. Risiko & Mitigasi
 
-| # | Risiko | Probabilitas | Dampak | Mitigasi |
-|---|---|:---:|:---:|---|
-| 1 | **Firebase free tier limits** | Rendah | Sedang | Monitor usage via Firebase Console; upgrade ke Blaze plan jika mendekati limit. Dengan 2–5 user, free tier seharusnya cukup. |
-| 2 | **Offline data conflict** | Rendah | Rendah | Firestore handles merge secara otomatis dengan last-write-wins. Konflik jarang terjadi dengan jumlah user sedikit. |
-| 3 | **Data loss** | Sangat Rendah | Tinggi | Aktifkan Firestore backup/export rules. Data tersimpan di cloud Firebase dengan redundansi bawaan Google Cloud. |
-| 4 | **User adoption resistance** | Sedang | Sedang | UI dibuat sesederhana mungkin. Pelatihan singkat untuk tim. Bahasa Indonesia agar mudah dipahami. |
-| 5 | **Perubahan requirement** | Sedang | Sedang | Arsitektur Clean Architecture memudahkan perubahan. Scope v1 dijaga ketat, fitur tambahan masuk ke backlog v2. |
-| 6 | **Security breach** | Rendah | Tinggi | Firebase Security Rules enforce role-based access. Semua operasi sensitif hanya bisa dilakukan oleh admin. |
+| Risiko | Mitigasi |
+|---|---|
+| Koneksi putus saat menyimpan | Pertahankan isian dan coba lagi dengan kunci idempotensi yang sama. |
+| Salah tafsir pesan Telegram | Tanyakan detail ambigu dan minta staf meninjau ringkasan. |
+| Data lama tidak muncul di laporan baru | Pertahankan Firestore sebagai arsip. Laporan Supabase dimulai saat cutover. |
+| Akun atau token internal disalahgunakan | Periksa status aktif, batasi izin, dan cabut token yang sudah tidak diperlukan. |
 
----
-
-## Lampiran: Arsitektur Tingkat Tinggi
-
-```mermaid
-flowchart TD
-    subgraph UI["UI Layer (Jetpack Compose)"]
-        S1["Login Screen"]
-        S2["Dashboard Screen"]
-        S3["Order Screens"]
-        S4["Product Screens"]
-        S5["Report Screens"]
-        S6["User Mgmt Screens"]
-    end
-
-    subgraph VM["ViewModel Layer"]
-        V1["AuthViewModel"]
-        V2["DashboardViewModel"]
-        V3["OrderViewModel"]
-        V4["ProductViewModel"]
-        V5["ReportViewModel"]
-        V6["UserViewModel"]
-    end
-
-    subgraph Domain["Domain Layer (Use Cases)"]
-        U1["Auth UseCases"]
-        U2["Order UseCases"]
-        U3["Product UseCases"]
-        U4["Report UseCases"]
-        U5["User UseCases"]
-    end
-
-    subgraph Data["Data Layer (Repositories)"]
-        R1["AuthRepository"]
-        R2["OrderRepository"]
-        R3["ProductRepository"]
-        R4["UserRepository"]
-    end
-
-    subgraph Firebase["Firebase"]
-        FA["Firebase Auth"]
-        FS["Firestore"]
-    end
-
-    UI --> VM
-    VM --> Domain
-    Domain --> Data
-    R1 --> FA
-    R2 --> FS
-    R3 --> FS
-    R4 --> FS
-```
-
-### Firestore Collections
-
-```mermaid
-erDiagram
-    users {
-        string uid PK
-        string email
-        string displayName
-        string role "admin | staff"
-        boolean isActive
-        timestamp createdAt
-    }
-
-    products {
-        string id PK
-        string name
-        string category
-        long price "IDR"
-        string unit "botol | liter | pack"
-        string description
-        boolean isActive
-        timestamp createdAt
-        timestamp updatedAt
-    }
-
-    priceHistory {
-        string id PK
-        long oldPrice "IDR"
-        long newPrice "IDR"
-        timestamp changedAt
-        string changedBy "uid"
-    }
-
-    orders {
-        string id PK
-        string customerName
-        string customerPhone "optional"
-        string customerAddress "optional"
-        string status "pending | processing | delivered | cancelled"
-        string paymentMethod "cash | transfer | ewallet"
-        long totalPrice "IDR"
-        string createdBy "uid"
-        timestamp createdAt
-        timestamp updatedAt
-    }
-
-    orderItems {
-        string id PK
-        string productId
-        string productName "snapshot"
-        long price "snapshot IDR"
-        int quantity
-        string sweetLevel "tanpa_gula | less_sugar | normal | extra_sweet"
-        long subtotal "price x quantity"
-    }
-
-    products ||--o{ priceHistory : "has"
-    orders ||--|{ orderItems : "contains"
-    users ||--o{ orders : "creates"
-```
-
----
-
-> [!NOTE]
-> Dokumen ini adalah _living document_ yang akan diperbarui seiring perkembangan proyek. Semua perubahan signifikan harus didiskusikan dan disetujui oleh stakeholder sebelum implementasi.
+Lihat [arsitektur dan API](TRD.md), [skema](DATABASE_SCHEMA.md), serta [alur pengguna](WORKFLOW.md).

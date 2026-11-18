@@ -44,7 +44,7 @@ fun OfflineBanner(isOffline: Boolean, modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(end = 2.dp)
                 )
                 Text(
-                    text = "Offline — perubahan akan tersimpan saat koneksi pulih",
+                    text = "Koneksi terputus. Coba lagi setelah koneksi pulih.",
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White
                 )

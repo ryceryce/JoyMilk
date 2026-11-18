@@ -43,7 +43,7 @@ fun ProductListScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // Category filter chips — from Firestore
+            // Category filter chips
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)

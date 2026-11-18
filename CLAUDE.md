@@ -9,7 +9,7 @@
 
 **JoyMilk** is an internal Android app for a soy milk (susu kedelai) business.
 It handles order recording, product management with price history, and sales reporting.
-2–5 internal users, cloud-synced via Firebase. UI entirely in **Bahasa Indonesia**.
+2–5 internal users. The app uses Supabase Postgres through Vercel and keeps Firebase Auth. Deployment status is tracked in the implementation plan. UI entirely in **Bahasa Indonesia**.
 
 ---
 
@@ -39,9 +39,9 @@ Be lazy about the solution, never about the change itself. No abstraction, wrapp
 ## Key Technical Decisions
 
 1. **Price snapshot pattern**: Orders freeze `productName` and `priceAtOrder` at creation time. These are immutable. Reports always use `priceAtOrder`, never `currentPrice`.
-2. **Price history auto-tracking**: When admin updates a product price, a Firestore transaction updates `currentPrice` AND creates a `priceHistory` subcollection entry.
+2. **Price history auto-tracking**: When admin updates a product price, a Postgres transaction updates `current_price` and inserts its `price_history` row.
 3. **Sweet level**: Per order item preference — `Tanpa Gula | Less Sugar | Normal | Extra Sweet`. Does NOT affect price.
-4. **Role-based access**: `admin` (full CRUD) vs `staff` (orders + read products). Enforced in both Firestore rules AND app-level UI guards.
+4. **Role-based access**: `admin` (full CRUD) vs `staff` (orders + read products). Enforce active profiles and roles at the API, with app-level UI guards.
 5. **Money values**: All stored as `Long` (IDR, no decimals). Rp 10.000 → `10000`.
 6. **UI language**: Bahasa Indonesia — all labels, messages, buttons.
 7. **State management**: `StateFlow` only, never `LiveData`. Use `collectAsStateWithLifecycle()`.
@@ -52,12 +52,12 @@ Be lazy about the solution, never about the change itself. No abstraction, wrapp
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Kotlin (no Java) |
+| Language | Kotlin for Android, TypeScript for the Vercel backend |
 | UI | Jetpack Compose + Material 3 |
 | Navigation | Compose Navigation (single-activity) |
-| Architecture | MVVM — Screen → ViewModel → Repository → Firebase |
+| Architecture | MVVM — Screen → ViewModel → Repository → Vercel API |
 | DI | Hilt (`@HiltViewModel`, `@Inject`, `@Module`) |
-| Backend | Firebase Firestore + Firebase Auth |
+| Backend | Vercel (Next.js on Node.js), Supabase Postgres and Realtime, Firebase Auth |
 | State | `StateFlow` + sealed class `UiState` |
 | Build | Gradle Kotlin DSL, version catalog |
 
@@ -66,14 +66,13 @@ Be lazy about the solution, never about the change itself. No abstraction, wrapp
 ## When Modifying This Codebase
 
 - Always use Jetpack Compose for UI (no XML layouts)
-- Follow MVVM: `Screen` → `ViewModel` → `Repository` → Firestore
+- Follow MVVM: `Screen` → `ViewModel` → `Repository` → Vercel API
 - Use Hilt `@Inject` for all dependencies
 - `StateFlow` for reactive state, never `LiveData`
 - Handle loading/error/success states in every screen via sealed `UiState`
 - Repositories return `Result<T>` from suspend functions
 - Currency formatting: use `CurrencyUtils.formatRupiah()`
 - Date formatting: use `DateUtils` helpers
-- All Firestore collection names from `Constants.kt`
 
 ---
 
@@ -85,21 +84,9 @@ Be lazy about the solution, never about the change itself. No abstraction, wrapp
 3. Add route to `ui/navigation/NavGraph.kt`
 4. Add role check if admin-only
 
-### Adding a new Firestore collection
-1. Create data model in `data/model/`
-2. Create repository in `data/repository/`
-3. Provide Firebase instances via Hilt in `di/AppModule.kt`
+### Adding a data operation
 
-### Handling Firestore operations
-```kotlin
-// Repository pattern — always return Result<T>
-suspend fun getOrders(): Result<List<Order>> = runCatching {
-    firestore.collection("orders")
-        .orderBy("createdAt", Query.Direction.DESCENDING)
-        .get().await()
-        .toObjects(Order::class.java)
-}
-```
+Define the API contract and authorize it in the backend. Use a versioned SQL migration when the schema changes. Wire the Android repository through Hilt and return Result<T>.
 
 ### ViewModel UiState pattern
 ```kotlin
@@ -112,24 +99,17 @@ sealed interface OrderUiState {
 
 ---
 
-## Firestore Collections
+## Business Data
 
-```
-/users/{userId}             → name, email, role, isActive, createdAt
-/products/{productId}       → name, category, currentPrice, unit, isActive
-  └─ /priceHistory/{id}     → price, effectiveDate, changedBy
-/orders/{orderId}           → customerName, customerPhone?, deliveryAddress?, paymentMethod, status, totalAmount, createdBy, notes?
-  └─ /items/{itemId}        → productId, productName↑, priceAtOrder↑, quantity, subtotal, sweetLevel
-                               ↑ = snapshot, immutable after creation
-```
+See [database schema](docs/DATABASE_SCHEMA.md) and [API contracts](docs/TRD.md). Reuse the order service across Android, Telegram, and MCP. Follow [the implementation plan](docs/IMPLEMENTATION_PLAN.md) for cutover.
 
 ---
 
 ## Security & Safety — NEVER cut these
 
-- Trust-boundary validation (Firestore security rules)
+- Validate input and authorization at the API. Restrict business-table grants to server roles.
 - Role-based access enforcement (both server and client)
-- Data-loss prevention (Firestore transactions for multi-doc writes)
+- Data-loss prevention (Postgres transactions for related writes)
 - Price snapshot integrity (never mutate priceAtOrder)
 - Input validation on all forms
 

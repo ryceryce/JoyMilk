@@ -126,7 +126,7 @@ private fun ProductForm(
             singleLine = true
         )
 
-        // Category dropdown — from Firestore + option to add new
+        // Category dropdown
         ExposedDropdownMenuBox(expanded = categoryExpanded, onExpandedChange = { categoryExpanded = it }) {
             OutlinedTextField(
                 value = category,

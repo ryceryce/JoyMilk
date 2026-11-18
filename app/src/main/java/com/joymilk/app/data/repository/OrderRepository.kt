@@ -1,84 +1,46 @@
 package com.joymilk.app.data.repository
 
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
+import android.net.Uri
 import com.joymilk.app.data.model.Order
 import com.joymilk.app.data.model.OrderItem
-import com.joymilk.app.util.Constants
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
+import org.json.JSONArray
+import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class OrderRepository @Inject constructor(
-    private val firestore: FirebaseFirestore
-) {
-    private val ordersRef = firestore.collection(Constants.COLLECTION_ORDERS)
-
-    suspend fun createOrder(order: Order, items: List<OrderItem>): Result<String> = runCatching {
-        // Batch write: order doc + all item sub-docs
-        val orderRef = ordersRef.document()
-        val batch = firestore.batch()
-        batch.set(orderRef, order.copy(createdAt = Timestamp.now(), updatedAt = Timestamp.now()))
-        items.forEach { item ->
-            val itemRef = orderRef.collection(Constants.SUBCOLLECTION_ITEMS).document()
-            batch.set(itemRef, item)
-        }
-        batch.commit().await()
-        orderRef.id
+class OrderRepository @Inject constructor(private val api: JoyMilkApi) {
+    fun getOrders(statusFilter: String? = null) = api.observe("orders") {
+        val path = statusFilter?.let { "orders?status=${Uri.encode(it)}" } ?: "orders"
+        api.arrayAt(path).mapObjects { it.readOrder() }
+    }
+    fun observeOrder(id: String) = api.observe("orders") { getOrder(id) }
+    suspend fun getOrder(id: String): Pair<Order, List<OrderItem>> {
+        val result = api.objectAt("orders/${Uri.encode(id)}")
+        return result.readOrder() to result.getJSONArray("items").mapObjects { it.readItem() }
     }
 
-    fun getOrders(statusFilter: String? = null): Flow<List<Order>> = callbackFlow {
-        var query: Query = ordersRef.orderBy("createdAt", Query.Direction.DESCENDING)
-        if (!statusFilter.isNullOrBlank()) {
-            query = query.whereEqualTo("status", statusFilter)
-        }
-        val listener = query.addSnapshotListener { snap, e ->
-            if (e != null) { close(e); return@addSnapshotListener }
-            trySend(snap?.toObjects(Order::class.java) ?: emptyList())
-        }
-        awaitClose { listener.remove() }
+    suspend fun createOrder(order: Order, items: List<OrderItem>, key: String): Result<String> = runCatching {
+        val result = api.request("orders", "POST", payload(order, items), key)
+        api.invalidate("orders")
+        JSONObject(result).getString("id")
     }
-
-    fun getOrder(orderId: String): Flow<Order?> = callbackFlow {
-        val listener = ordersRef.document(orderId).addSnapshotListener { snap, e ->
-            if (e != null) { close(e); return@addSnapshotListener }
-            trySend(snap?.toObject(Order::class.java))
-        }
-        awaitClose { listener.remove() }
-    }
-
-    fun getOrderItems(orderId: String): Flow<List<OrderItem>> = callbackFlow {
-        val listener = ordersRef.document(orderId)
-            .collection(Constants.SUBCOLLECTION_ITEMS)
-            .addSnapshotListener { snap, e ->
-                if (e != null) { close(e); return@addSnapshotListener }
-                trySend(snap?.toObjects(OrderItem::class.java) ?: emptyList())
-            }
-        awaitClose { listener.remove() }
-    }
-
-    suspend fun updateOrderStatus(orderId: String, status: String): Result<Unit> = runCatching {
-        ordersRef.document(orderId).update(
-            mapOf("status" to status, "updatedAt" to Timestamp.now())
-        ).await()
-    }
-
     suspend fun updateOrder(order: Order, items: List<OrderItem>): Result<Unit> = runCatching {
-        val orderRef = ordersRef.document(order.id)
-        // Delete existing items then re-add
-        val existingItems = orderRef.collection(Constants.SUBCOLLECTION_ITEMS).get().await()
-        val batch = firestore.batch()
-        existingItems.documents.forEach { batch.delete(it.reference) }
-        batch.set(orderRef, order.copy(updatedAt = Timestamp.now()))
-        items.forEach { item ->
-            val itemRef = orderRef.collection(Constants.SUBCOLLECTION_ITEMS).document()
-            batch.set(itemRef, item)
-        }
-        batch.commit().await()
+        api.request("orders/${Uri.encode(order.id)}", "PATCH", payload(order, items).put("updatedAt", order.updatedAt.toString()))
+        api.invalidate("orders")
     }
+    suspend fun updateOrderStatus(order: Order, status: String): Result<Unit> = runCatching {
+        api.request("orders/${Uri.encode(order.id)}/status", "PATCH",
+            JSONObject().put("status", status).put("updatedAt", order.updatedAt.toString()))
+        api.invalidate("orders")
+    }
+
+    private fun payload(order: Order, items: List<OrderItem>) = JSONObject()
+        .put("customerName", order.customerName).put("customerPhone", order.customerPhone)
+        .put("deliveryAddress", order.deliveryAddress).put("paymentMethod", order.paymentMethod)
+        .put("notes", order.notes)
+        .put("items", JSONArray(items.map {
+            JSONObject().put("productId", it.productId).put("quantity", it.quantity).put("sweetLevel", it.sweetLevel)
+                .apply { if (it.id.isNotBlank()) put("id", it.id) }
+        }))
 }

@@ -1,11 +1,10 @@
 package com.joymilk.app.data.model
 
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.DocumentId
+import java.time.Instant
 
 data class PriceHistory(
-    @DocumentId val id: String = "",
+    val id: String = "",
     val price: Long = 0L,
-    val effectiveDate: Timestamp = Timestamp.now(),
+    val effectiveDate: Instant = Instant.now(),
     val changedBy: String = ""
 )

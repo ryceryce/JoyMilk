@@ -1,168 +1,48 @@
 # 🥛 JoyMilk
 
-**Aplikasi Android internal untuk pencatatan orderan bisnis susu kedelai.**
+Aplikasi Android internal untuk mencatat order, mengelola produk, dan merekap penjualan susu kedelai. Staf dapat menyiapkan order dari Android, Telegram, atau klien AI internal melalui MCP.
 
----
+## Arsitektur
 
-## 📋 Tentang
+Firebase Auth menangani login email/password. Android mengakses data bisnis lewat API Vercel. Backend menulis ke Supabase Postgres dan mengirim sinyal perubahan lewat Supabase Realtime. Order menyimpan nama dan harga produk saat transaksi. Tingkat kemanisan tidak memengaruhi harga.
 
-JoyMilk adalah aplikasi Android native yang dirancang khusus untuk operasional internal bisnis susu kedelai. Aplikasi ini membantu tim (2–5 orang) dalam:
+## Setup staging atau produksi
 
-- 📝 **Pencatatan order** dengan harga otomatis dari master data
-- 📦 **Manajemen produk** dengan riwayat perubahan harga
-- 📈 **Laporan penjualan** harian, mingguan, dan bulanan
-- 👤 **Manajemen user** dengan pembagian role (admin/staff)
-- ☁️ **Sinkronisasi cloud** real-time antar perangkat
+1. Siapkan proyek Firebase dengan email/password dan proyek Supabase. Buka konfigurasi integrasi Firebase Auth pihak ketiga di Supabase, isi Firebase Project ID, lalu nonaktifkan **Allow public access to channels** di Realtime Settings. Pakai proyek terpisah untuk staging dan produksi. [Integrasi Firebase Auth](https://supabase.com/docs/guides/auth/third-party/firebase-auth) · [Realtime Settings](https://supabase.com/docs/guides/realtime/settings)
+2. Jalankan migrasi SQL di `supabase/migrations/` secara berurutan dengan role migrasi. Atur kata sandi untuk role `joymilk_runtime` melalui sesi database admin, misalnya dengan `\password joymilk_runtime` di psql. Ambil URL koneksi backend dari Supabase Connect dan gunakan role runtime. Untuk Vercel, gunakan transaction pooler jika sesuai dengan jaringan proyek. Backend menonaktifkan prepared statements untuk mode ini. [Koneksi Postgres Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres)
+3. Di Vercel, pilih root directory `backend`, framework Next.js, dan Node.js 22. Isi `DATABASE_URL` dan `FIREBASE_SERVICE_ACCOUNT_JSON` memakai nilai lingkungan tersebut. Lihat [contoh environment](backend/.env.example). Simpan kredensial penulis database dan Firebase Admin di backend.
+4. Masuk ke `backend` dan jalankan `npm ci`. Dengan kredensial Firebase Admin dan koneksi role admin database di lingkungan lokal, jalankan `npm run admin -- profile <firebase-uid> admin` untuk admin pertama. Ulangi untuk staf yang sudah punya akun Firebase Auth dengan peran `staff`. Perintah ini juga menyiapkan claim Realtime. Login kembali di Android bila sesi lama belum memiliki claim baru.
+5. Masukkan kategori dan produk awal lewat Android setelah profil admin aktif. Supabase dimulai dari database kosong. Laporan Supabase mencakup transaksi sejak cutover. Order dan riwayat harga Firestore tetap di arsip. Lihat [prosedur cutover](docs/IMPLEMENTATION_PLAN.md).
 
----
+## Menjalankan Android
 
-## 🏗️ Tech Stack
+- Siapkan Android Studio, JDK 17+, dan Android SDK 35. Letakkan konfigurasi Firebase untuk `com.joymilk.app` di `app/google-services.json`.
+- Isi `JOYMILK_API_URL`, `SUPABASE_URL`, dan `SUPABASE_PUBLISHABLE_KEY` melalui environment atau Gradle properties. Pakai URL dasar HTTPS untuk API dan Supabase, tanpa path API tambahan.
+- Jalankan dari Android Studio atau build dengan `gradle :app:assembleDebug` memakai Gradle 8.11.1. Skrip `gradlew.bat` membutuhkan JAR wrapper.
 
-| Layer | Technology |
-|-------|-----------|
-| Language | Kotlin |
-| UI | Jetpack Compose + Material 3 |
-| Architecture | MVVM (single-activity) |
-| DI | Hilt |
-| Backend | Firebase Firestore + Auth |
-| Build | Gradle Kotlin DSL |
+## Telegram dan MCP
 
----
+- Di lingkungan Vercel, tambahkan `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `OPENAI_API_KEY`, dan `OPENAI_MODEL`. Gunakan model yang mendukung Structured Outputs. Chat staf dikirim ke layanan interpretasi untuk menyiapkan draf. Jangan masukkan data pelanggan yang tidak diperlukan.
+- Daftarkan webhook Telegram ke `https://<backend>/api/telegram/webhook` dengan nilai `secret_token` yang sama, `allowed_updates` berisi `message` dan `callback_query`, serta `max_connections=1` untuk menjaga urutan percakapan.
+- Admin menautkan akun dengan `npm run admin -- link <firebase-uid> <telegram-user-id>` dan mencabut tautan dengan `npm run admin -- unlink <firebase-uid>`.
+- Untuk klien AI, jalankan `npm run admin -- token <firebase-uid> confirm` untuk menerbitkan token yang dapat menyimpan order, atau hilangkan `confirm` untuk akses pencarian dan draf saja. Simpan token dari keluaran sekali tampil dan catat ID pencabutan. Cabut dengan `npm run admin -- revoke <firebase-uid> <revocation-id>`.
+- Arahkan klien MCP yang mendukung header kustom ke `https://<backend>/api/mcp` dengan Streamable HTTP dan header `Authorization: Bearer <token>`. Klien meminta persetujuan pengguna sebelum memakai tool konfirmasi. [Telegram Bot API](https://core.telegram.org/bots/api#setwebhook) · [MCP Streamable HTTP](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports)
 
-## 📁 Project Structure
+## Verifikasi lokal
 
-```
-com.joymilk.app/
-├── data/
-│   ├── model/          # Data classes (User, Product, Order, OrderItem, PriceHistory, SweetLevel)
-│   └── repository/     # Firebase operations (Auth, Order, Product, Report, User)
-├── di/                 # Hilt modules
-├── ui/
-│   ├── auth/           # Login
-│   ├── dashboard/      # Dashboard
-│   ├── order/          # Order (List, Form, Detail)
-│   ├── product/        # Product (List, Form, PriceHistory)
-│   ├── report/         # Report
-│   ├── user/           # User Management
-│   ├── components/     # Reusable composables
-│   ├── navigation/     # NavGraph
-│   └── theme/          # Material 3 theme
-└── util/               # DateUtils, CurrencyUtils, Constants
-```
+Di `backend`, jalankan `npm run check` dan `npm run build`. Untuk pengujian transaksi, siapkan database PostgreSQL uji terpisah dan terapkan migrasi skema pertama. Set `JOYMILK_TEST_OWNER_URL` ke koneksi role owner database uji dan `DATABASE_URL` ke koneksi runtime database uji, lalu jalankan `npm test`. Tes menulis fixture ke database uji.
 
----
+## Dokumentasi
 
-## 🚀 Getting Started
+| Dokumen | Isi |
+|---|---|
+| [PRD](docs/PRD.md) | Kebutuhan pengguna dan aturan produk |
+| [TRD](docs/TRD.md) | Arsitektur, API, autentikasi, dan MCP |
+| [Skema database](docs/DATABASE_SCHEMA.md) | Tabel Postgres, akses, dan transaksi |
+| [Workflow](docs/WORKFLOW.md) | Alur Android, Telegram, dan klien AI |
+| [Aturan UI/UX](docs/UI_UX_RULES.md) | Komponen, bahasa, dan status UI |
+| [Mockup](docs/MOCKUP.md) | Mockup layar Android dan wireframe |
+| [Prototipe interaktif](docs/mockup.html) | Pratinjau layar Android |
+| [Rencana implementasi](docs/IMPLEMENTATION_PLAN.md) | Tahapan, pengujian, dan cutover |
 
-### Prerequisites
-- Android Studio Ladybug (2024.2) atau lebih baru
-- JDK 17+
-- Akun Google (untuk Firebase)
-
-### 1. Clone Repository
-```bash
-git clone <repo-url>
-cd JoyMilk
-```
-
-### 2. Setup Firebase
-1. Buka [Firebase Console](https://console.firebase.google.com/)
-2. Buat project baru bernama "JoyMilk"
-3. Tambahkan Android app:
-   - Package name: `com.joymilk.app`
-   - App nickname: JoyMilk
-4. Download `google-services.json`
-5. Letakkan file di folder `app/`
-
-### 3. Enable Firebase Services
-Di Firebase Console (sidebar kiri):
-- **Authentication** → klik **"Security"** → Authentication → Get started → Sign-in method → Email/Password → Enable
-- **Firestore** → klik **"Databases & Storage"** → Firestore Database → Create database → pilih region **asia-southeast2 (Jakarta)** → Start in **production mode**
-
-### 4. Setup Initial Admin User
-1. Di Firebase Console → Authentication → Add user:
-   - Email: `admin@joymilk.com` (atau email admin Anda)
-   - Password: (buat password yang kuat)
-2. Copy UID dari user yang baru dibuat
-3. Di Firestore → Buat document manual:
-   ```
-   Collection: users
-   Document ID: (paste UID dari step 2)
-   Fields:
-     - name: "Admin" (string)
-     - email: "admin@joymilk.com" (string)
-     - role: "admin" (string)
-     - isActive: true (boolean)
-     - createdAt: (timestamp, now)
-   ```
-
-### 5. Deploy Firestore Security Rules
-Copy rules dari `docs/DATABASE_SCHEMA.md` bagian Security Rules ke Firebase Console → Firestore → Rules.
-
-### 6. Create Firestore Indexes
-Di Firebase Console → Firestore → Indexes, buat composite indexes:
-- Collection: `orders` → Fields: `status` (ASC), `createdAt` (DESC)
-- Collection: `orders` → Fields: `createdBy` (ASC), `createdAt` (DESC)
-
-### 7. Build & Run
-```bash
-./gradlew assembleDebug
-```
-Atau buka project di Android Studio dan klik ▶️ Run.
-
----
-
-## 📖 Dokumentasi
-
-| Dokumen | Deskripsi |
-|---------|-----------|
-| [PRD](docs/PRD.md) | Product Requirements Document |
-| [TRD](docs/TRD.md) | Technical Requirements Document |
-| [Database Schema](docs/DATABASE_SCHEMA.md) | Skema database Firestore |
-| [Workflow](docs/WORKFLOW.md) | Alur kerja aplikasi |
-| [UI/UX Rules](docs/UI_UX_RULES.md) | Aturan desain dan komponen UI |
-| [Mockup UI](docs/MOCKUP.md) | Spesifikasi mockup 13 layar & wireframe ASCII |
-| [Interactive Prototype](docs/mockup.html) | Prototype mockup interaktif web (bisa dibuka di browser) |
-| [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) | Rencana implementasi per fase |
-
----
-
-## 🔑 Fitur Utama
-
-### Price Snapshot
-Setiap order menyimpan harga produk pada saat order dibuat. Jika harga produk berubah, order lama tetap menggunakan harga saat transaksi. Ini memastikan laporan keuangan selalu akurat.
-
-### Sweet Level
-Setiap item order memiliki preferensi tingkat kemanisan:
-- Tanpa Gula
-- Less Sugar
-- Normal
-- Extra Sweet
-
-Sweet level hanya preferensi — tidak mempengaruhi harga.
-
-### Role-Based Access
-| Fitur | Admin | Staff |
-|-------|:-----:|:-----:|
-| Input order | ✅ | ✅ |
-| Lihat order | ✅ | ✅ |
-| Update status | ✅ | ✅ |
-| Kelola produk | ✅ | ❌ |
-| Kelola user | ✅ | ❌ |
-| Lihat laporan | ✅ | ✅ |
-
----
-
-## 🤖 Agent Instructions
-
-File instruksi untuk AI coding agents:
-- [`AGENTS.md`](AGENTS.md) — Universal agent rules (Gemini, Copilot, Codex, dll.)
-- [`CLAUDE.md`](CLAUDE.md) — Claude-specific instructions
-
-Kedua file mengadaptasi filosofi [Ponytail](https://github.com/dietrichgebert/ponytail) — "lazy senior dev" yang mengutamakan solusi minimal dan tepat.
-
----
-
-## 📄 License
-
-Private — Internal use only.
+Instruksi pengembangan tersedia di [AGENTS.md](AGENTS.md) dan [CLAUDE.md](CLAUDE.md). JoyMilk untuk penggunaan internal.

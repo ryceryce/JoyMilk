@@ -1,10 +1,9 @@
 package com.joymilk.app.data.model
 
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.DocumentId
+import java.time.Instant
 
 data class Order(
-    @DocumentId val id: String = "",
+    val id: String = "",
     val customerName: String = "",
     val customerPhone: String = "",
     val deliveryAddress: String = "",
@@ -12,7 +11,7 @@ data class Order(
     val status: String = "pending",       // "pending" | "diproses" | "selesai" | "dibatalkan"
     val totalAmount: Long = 0L,
     val createdBy: String = "",
-    val createdAt: Timestamp = Timestamp.now(),
-    val updatedAt: Timestamp = Timestamp.now(),
+    val createdAt: Instant = Instant.now(),
+    val updatedAt: Instant = Instant.now(),
     val notes: String = ""
 )

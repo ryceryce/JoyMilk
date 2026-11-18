@@ -1,10 +1,9 @@
 package com.joymilk.app.data.model
 
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.DocumentId
+import java.time.Instant
 
 data class Product(
-    @DocumentId val id: String = "",
+    val id: String = "",
     val name: String = "",
     val category: String = "",
     val size: String = "",
@@ -12,6 +11,6 @@ data class Product(
     val currentPrice: Long = 0L,
     val unit: String = "",
     val isActive: Boolean = true,
-    val createdAt: Timestamp = Timestamp.now(),
-    val updatedAt: Timestamp = Timestamp.now()
+    val createdAt: Instant = Instant.now(),
+    val updatedAt: Instant = Instant.now()
 )

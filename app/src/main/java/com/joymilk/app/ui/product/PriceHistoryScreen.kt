@@ -74,7 +74,7 @@ private fun PriceHistoryItem(entry: PriceHistory) {
                 )
             }
             Text(
-                text = DateUtils.formatDate(entry.effectiveDate.toDate()),
+                text = DateUtils.formatDate(entry.effectiveDate),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

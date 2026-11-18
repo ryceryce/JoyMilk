@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.joymilk.app.data.model.PriceHistory
 import com.joymilk.app.data.model.Product
-import com.joymilk.app.data.repository.AuthRepository
 import com.joymilk.app.data.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,8 +35,7 @@ sealed interface PriceHistoryUiState {
 
 @HiltViewModel
 class ProductViewModel @Inject constructor(
-    private val productRepository: ProductRepository,
-    private val authRepository: AuthRepository
+    private val productRepository: ProductRepository
 ) : ViewModel() {
 
     private val _listState = MutableStateFlow<ProductListUiState>(ProductListUiState.Loading)
@@ -76,26 +74,22 @@ class ProductViewModel @Inject constructor(
             _formState.value = ProductFormUiState.Loaded(Product())
             return
         }
-        // For edit: find from existing list or load fresh
-        val existing = (_listState.value as? ProductListUiState.Success)
-            ?.products?.find { it.id == productId }
-        if (existing != null) {
-            _formState.value = ProductFormUiState.Loaded(existing)
-        } else {
+        viewModelScope.launch {
             _formState.value = ProductFormUiState.Loading
-            // Will be populated when list loads
+            runCatching { productRepository.getProduct(productId) }
+                .onSuccess { _formState.value = ProductFormUiState.Loaded(it) }
+                .onFailure { _formState.value = ProductFormUiState.Error(it.message ?: "Gagal memuat produk") }
         }
     }
 
     fun saveProduct(product: Product) {
         viewModelScope.launch {
             _formState.value = ProductFormUiState.Loading
-            val uid = authRepository.currentUser?.uid ?: ""
             val result = if (product.id.isEmpty()) {
                 productRepository.addProduct(product)
                     .map { }
             } else {
-                productRepository.updateProduct(product, uid)
+                productRepository.updateProduct(product)
             }
             result
                 .onSuccess { _formState.value = ProductFormUiState.Saved }

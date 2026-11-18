@@ -2,15 +2,17 @@ package com.joymilk.app.ui.report
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.Timestamp
 import com.joymilk.app.data.repository.ReportData
 import com.joymilk.app.data.repository.ReportRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 enum class ReportPeriod { HARIAN, MINGGUAN, BULANAN }
@@ -23,35 +25,28 @@ data class ReportUiState(
 )
 
 @HiltViewModel
-class ReportViewModel @Inject constructor(
-    private val reportRepository: ReportRepository
-) : ViewModel() {
-
+class ReportViewModel @Inject constructor(private val reportRepository: ReportRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(ReportUiState())
-    val uiState: StateFlow<ReportUiState> = _uiState
+    val uiState = _uiState.asStateFlow()
+    private var loadJob: Job? = null
 
     init { loadReport(ReportPeriod.HARIAN) }
 
     fun loadReport(period: ReportPeriod) {
-        _uiState.update { it.copy(isLoading = true, period = period) }
-        val (start, end) = dateRangeFor(period)
-        viewModelScope.launch {
-            reportRepository.getReport(start, end)
-                .onSuccess { data -> _uiState.update { it.copy(isLoading = false, data = data) } }
-                .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
+        loadJob?.cancel()
+        _uiState.update { it.copy(isLoading = true, period = period, error = null) }
+        loadJob = viewModelScope.launch {
+            reportRepository.changes().onStart { emit("*") }.collect {
+                val today = LocalDate.now(ZoneId.of("Asia/Jakarta"))
+                val start = today.minusDays(when (period) {
+                    ReportPeriod.HARIAN -> 0
+                    ReportPeriod.MINGGUAN -> 6
+                    ReportPeriod.BULANAN -> 29
+                })
+                reportRepository.getReport(start, today)
+                    .onSuccess { data -> _uiState.update { it.copy(isLoading = false, data = data, error = null) } }
+                    .onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
+            }
         }
-    }
-
-    private fun dateRangeFor(period: ReportPeriod): Pair<Timestamp, Timestamp> {
-        val cal = Calendar.getInstance()
-        cal.set(Calendar.HOUR_OF_DAY, 23); cal.set(Calendar.MINUTE, 59); cal.set(Calendar.SECOND, 59)
-        val end = Timestamp(cal.time)
-        cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0); cal.set(Calendar.SECOND, 0)
-        when (period) {
-            ReportPeriod.HARIAN -> { /* today already set */ }
-            ReportPeriod.MINGGUAN -> cal.add(Calendar.DAY_OF_YEAR, -6)
-            ReportPeriod.BULANAN -> cal.add(Calendar.DAY_OF_YEAR, -29)
-        }
-        return Timestamp(cal.time) to end
     }
 }

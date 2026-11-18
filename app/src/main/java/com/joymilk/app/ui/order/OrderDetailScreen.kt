@@ -56,10 +56,14 @@ fun OrderDetailScreen(
     ) { padding ->
         when (val state = detailState) {
             is OrderDetailUiState.Loading -> LoadingIndicator()
-            is OrderDetailUiState.Error -> Box(
-                Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) { Text(state.message, color = MaterialTheme.colorScheme.error) }
+            is OrderDetailUiState.Error -> Column(
+                Modifier.fillMaxSize().padding(padding).padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(state.message, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = { viewModel.loadOrderDetail(orderId) }) { Text("Coba Lagi") }
+            }
 
             is OrderDetailUiState.Success -> {
                 val order = state.order
@@ -80,7 +84,7 @@ fun OrderDetailScreen(
                         ) {
                             StatusChip(order.status)
                             Text(
-                                DateUtils.formatDate(order.createdAt.toDate()),
+                                DateUtils.formatDate(order.createdAt),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

@@ -1,5 +1,6 @@
 package com.joymilk.app.ui.order
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -34,9 +36,13 @@ fun OrderFormScreen(
     val formState by viewModel.formState.collectAsStateWithLifecycle()
     val isOffline by viewModel.isOffline.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) { viewModel.loadFormProducts() }
+    LaunchedEffect(orderId) { viewModel.loadFormProducts(orderId) }
+    val context = LocalContext.current
     LaunchedEffect(formState) {
-        if (formState is OrderFormUiState.Saved) onOrderSaved()
+        if (formState is OrderFormUiState.Saved) {
+            Toast.makeText(context, "Order berhasil disimpan", Toast.LENGTH_SHORT).show()
+            onOrderSaved()
+        }
     }
 
     var customerName by remember { mutableStateOf("") }
@@ -46,8 +52,20 @@ fun OrderFormScreen(
     var notes by remember { mutableStateOf("") }
     var items by remember { mutableStateOf(listOf(FormItem())) }
 
-    val isSaving = formState is OrderFormUiState.Loading
-    val products = (formState as? OrderFormUiState.Ready)?.products ?: emptyList()
+    val isSaving by viewModel.saving.collectAsStateWithLifecycle()
+    val saveError by viewModel.saveError.collectAsStateWithLifecycle()
+    val ready = formState as? OrderFormUiState.Ready
+    val products = ready?.products.orEmpty()
+    LaunchedEffect(ready?.existing) {
+        ready?.existing?.let { (order, lines) ->
+            customerName = order.customerName
+            customerPhone = order.customerPhone
+            deliveryAddress = order.deliveryAddress
+            paymentMethod = order.paymentMethod
+            notes = order.notes
+            items = lines.map { FormItem(it.id, it.productId, it.productName, it.priceAtOrder, it.quantity, it.sweetLevel) }
+        }
+    }
     val totalAmount = items.sumOf { it.subtotal }
 
     Scaffold(
@@ -56,7 +74,11 @@ fun OrderFormScreen(
         when (formState) {
             is OrderFormUiState.Idle, is OrderFormUiState.Loading -> LoadingIndicator()
             is OrderFormUiState.Saved -> LoadingIndicator()
-            else -> {
+            is OrderFormUiState.Error -> Column(Modifier.padding(padding).padding(16.dp)) {
+                Text((formState as OrderFormUiState.Error).message)
+                Button(onClick = { viewModel.loadFormProducts(orderId) }) { Text("Coba Lagi") }
+            }
+            is OrderFormUiState.Ready -> {
                 Box(modifier = Modifier.padding(padding)) {
                     LazyColumn(
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 100.dp),
@@ -126,10 +148,9 @@ fun OrderFormScreen(
                                 label = { Text("Catatan") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
                         }
 
-                        if (formState is OrderFormUiState.Error) {
+                        saveError?.let { message ->
                             item {
-                                Text((formState as OrderFormUiState.Error).message,
-                                    color = MaterialTheme.colorScheme.error,
+                                Text(message, color = MaterialTheme.colorScheme.error,
                                     style = MaterialTheme.typography.bodySmall)
                             }
                         }
@@ -151,10 +172,10 @@ fun OrderFormScreen(
                             }
                             Button(
                                 onClick = { viewModel.saveOrder(customerName, customerPhone, deliveryAddress, paymentMethod, notes, items) },
-                                enabled = !isSaving && customerName.isNotBlank() && items.any { it.productId.isNotBlank() }
+                                enabled = !isSaving && customerName.isNotBlank() && items.all { it.productId.isNotBlank() }
                             ) {
                                 if (isSaving) CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                                else Text("SIMPAN ORDER")
+                                else Text(if (saveError == null) "SIMPAN ORDER" else "COBA LAGI")
                             }
                         }
                     }
@@ -190,7 +211,9 @@ private fun OrderItemCard(
                         DropdownMenuItem(
                             text = { Text("${p.name} — ${CurrencyUtils.formatRupiah(p.currentPrice)}/${p.unit}") },
                             onClick = {
-                                onUpdate(item.copy(productId = p.id, productName = p.name, priceAtOrder = p.currentPrice))
+                                if (p.id != item.productId) {
+                                    onUpdate(item.copy(id = "", productId = p.id, productName = p.name, priceAtOrder = p.currentPrice))
+                                }
                                 productExpanded = false
                             }
                         )

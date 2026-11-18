@@ -38,9 +38,9 @@
 | Status | Hex | Style |
 |---|---|---|
 | **Pending** | `#FF9800` (Orange) | Orange background, dark text |
-| **Processing** | `#2196F3` (Blue) | Blue background, white text |
-| **Delivered** | `#4CAF50` (Green) | Green background, white text |
-| **Cancelled** | `#9E9E9E` (Grey) | Grey background, dark text |
+| **Diproses** | `#2196F3` (Blue) | Blue background, white text |
+| **Selesai** | `#4CAF50` (Green) | Green background, white text |
+| **Dibatalkan** | `#9E9E9E` (Grey) | Grey background, dark text |
 
 ### 1.3 Typography
 
@@ -127,9 +127,9 @@ Use `AssistChip` style with colored background:
 | Status | Background | Text Color |
 |---|---|---|
 | Pending | Orange (`#FF9800`) | Dark |
-| Processing | Blue (`#2196F3`) | White |
-| Delivered | Green (`#4CAF50`) | White |
-| Cancelled | Grey (`#9E9E9E`) | Dark |
+| Diproses | Blue (`#2196F3`) | White |
+| Selesai | Green (`#4CAF50`) | White |
+| Dibatalkan | Grey (`#9E9E9E`) | Dark |
 
 ### 2.4 Sweet Level Selector
 
@@ -199,9 +199,13 @@ flowchart LR
 
 ### 2.11 Error States
 
+These save states apply to the Vercel API design. Show **Order berhasil disimpan** after the API confirms the write. Refresh open order lists when a Realtime signal arrives or the connection resumes.
+
 | Error Type | UI Treatment |
 |---|---|
-| Transient (network timeout) | `Snackbar` with dismiss action |
+| Transient read failure | `Snackbar` with **Coba Lagi** action |
+| Order save fails before send | Keep form values. Show **Koneksi terputus. Order belum dikirim.** and **Coba Lagi**. |
+| Order save times out | Keep form values. Show **Status penyimpanan belum diketahui.** and **Coba Lagi**. Retry with the same idempotency key. |
 | Form validation | Inline error text below the field |
 | Critical failure | Full-screen error with **"Coba Lagi"** retry button |
 
@@ -367,7 +371,7 @@ Fields:
 > [!WARNING]
 > When editing an existing product and the price is changed, display a warning:
 > *"Harga akan diupdate dan dicatat di riwayat"*
-> The old price is saved to the `priceHistory` subcollection.
+> The backend records the new price and updates the product in one transaction.
 
 ### 3.8 Report Screen
 
